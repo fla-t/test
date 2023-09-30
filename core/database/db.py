@@ -2,7 +2,8 @@ import os
 from typing import Optional
 
 from psycopg2 import connect
-from psycopg2.extensions import connection, cursor as pg_cursor
+from psycopg2.extensions import connection
+from psycopg2.extensions import cursor as pg_cursor
 from psycopg2.extras import DictCursor
 
 SERIALIZATION_ERROR_SLEEP_BASE_TIME = 0.2  # Seconds
@@ -39,7 +40,7 @@ class BaseDatabase:
 
     def args() -> dict:
         return {
-            "dbname": os.environ.get("POSTGRES_DB_NAME"),
+            "dbname": os.environ.get("POSTGRES_DB"),
             "user": os.environ.get("POSTGRES_USER"),
             "password": os.environ.get("POSTGRES_PASSWORD"),
             "host": os.environ.get("POSTGRES_HOST"),
