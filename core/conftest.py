@@ -3,13 +3,15 @@ import hashlib
 import os
 import pathlib
 from contextlib import contextmanager
+from datetime import datetime
 from typing import Generator, List, Optional, Tuple
 from uuid import uuid4
 
 import pytest
+import pytz
 from database.db_pool import DBPool
 from database.pooler import ConnectionPooler
-from psycopg2.extensions import connection, cursor
+from psycopg2.extensions import ISOLATION_LEVEL_READ_COMMITTED, connection
 from testcontainers.postgres import PostgresContainer
 
 SCHEMA_DIR = f"{pathlib.Path(__file__).parent.absolute()}/database/migrations/*-*.sql"
@@ -89,7 +91,7 @@ def admin_conn(admin_pool_name: str) -> Generator[connection]:
     """
     Creates connection to admin db pool
 
-    :param admin_pool_name: Name of admin pool
+    wrapped with contextmanager just to have a better cleanup
     """
     admin_conn = ConnectionPooler.get_pool(admin_pool_name).get_conn()
     admin_conn.autocommit = True
@@ -98,7 +100,7 @@ def admin_conn(admin_pool_name: str) -> Generator[connection]:
     ConnectionPooler.get_pool(admin_pool_name).put_conn(admin_conn)
 
 
-def create_db(admin_pool_name: str, db_name: str, template_db: Optional[str] = None):
+def create_db(admin_pool_name: str, db_name: str, template_db: Optional[str] = None) -> bool:
     """
     Creates a db if it doesn't already exist.
     Returns True if a db was created, False if it already exists.
@@ -129,3 +131,46 @@ def template_db(postgres_connection) -> Generator[str, str, str]:
 
     ConnectionPooler.get_pool(template_db_name).close_all_conns()
     yield (admin_db_name, template_db_name, template_params)
+
+
+@contextmanager
+def temp_db(admin_pool_name, db_name, template_db=None, drop_db=True) -> None:
+    """Create database in postgresql."""
+    create_db(admin_pool_name, db_name, template_db=template_db)
+    yield db_name
+    if not drop_db:
+        return
+    with admin_conn(admin_pool_name) as ac, ac.cursor() as cur:
+        cur.execute("UPDATE pg_database SET datallowconn=false WHERE datname = %s;", (db_name,))
+        cur.execute(
+            "SELECT pg_terminate_backend(pg_stat_activity.pid)"
+            "FROM pg_stat_activity "
+            "WHERE pg_stat_activity.datname = %s;",
+            (db_name,),
+        )
+        cur.execute('DROP DATABASE IF EXISTS "{}";'.format(db_name))
+
+
+@pytest.fixture(scope="class")
+def scratch_db(template_db) -> Generator[str]:
+    """
+    This fixture relies on the template_db_params fixture and uses the template
+    database to create a test specific database.
+    It yields the pool name of the scratch db and patches pool of the ConnectionPooler.
+    """
+    (admin_db_name, template_db_name, template_params) = template_db
+
+    params = template_params.copy()
+
+    # DB name has timestamp
+    now = datetime.now(pytz.timezone("Asia/Karachi"))
+    scratch_db_name = f"test_{now:%Y-%m-%d_%I:%M:%S%p}"
+
+    params["dbname"] = scratch_db_name
+    ConnectionPooler.register(scratch_db_name, **params)
+
+    with temp_db(admin_db_name, db_name=scratch_db_name, template_db=template_db_name), patch(
+        "db_pool.DBPool.__init__.__defaults__",
+        (ISOLATION_LEVEL_READ_COMMITTED, scratch_db_name),
+    ):
+        yield scratch_db_name
