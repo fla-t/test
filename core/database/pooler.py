@@ -1,11 +1,11 @@
 import atexit
 import os
 import threading
-from typing import Optional, Dict
+from typing import Dict, Optional
 
 from psycopg2 import OperationalError
-from psycopg2.pool import ThreadedConnectionPool
 from psycopg2.extensions import connection
+from psycopg2.pool import ThreadedConnectionPool
 
 MIN_PG_CONNS = int(os.environ.get("POSTGRES_MIN_POOL_CONNS", 2))
 MAX_PG_CONNS = int(os.environ.get("POSTGRES_MAX_POOL_CONNS", 5))
@@ -15,6 +15,9 @@ MAX_PG_CONNECT_RETRIES = int(os.environ.get("POSTGRES_MAX_CONN_RETRIES", 5))
 class Pool:
     """Represents a psycopg2 connection pool"""
 
+    _pool: Optional[ThreadedConnectionPool]
+    _pool_lock: threading.Lock()
+
     def __init__(
         self, min_pg_conns: int = MIN_PG_CONNS, max_pg_conns: int = MAX_PG_CONNS, **conn_args
     ) -> None:
@@ -22,7 +25,7 @@ class Pool:
         self.max_pg_conns = max_pg_conns
         self.conn_args = self._get_args(**conn_args)
 
-        self._pool: Optional[ThreadedConnectionPool]
+        self._pool: Optional[ThreadedConnectionPool] = None
         self._pool_lock = threading.Lock()
 
     def close_all_conns(self) -> None:

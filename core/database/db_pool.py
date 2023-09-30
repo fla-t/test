@@ -1,12 +1,12 @@
-import db
 from typing import Optional
 
 from psycopg2.extensions import ISOLATION_LEVEL_READ_COMMITTED, connection
 
-from .pooler import ConnectionPooler, Pool
+from core.database.db import BaseDatabase
+from core.database.pooler import ConnectionPooler, Pool
 
 
-class DBPool(db.BaseDatabase):
+class DBPool(BaseDatabase):
     """
     Handler for postgres queries managed by connection pooling
     inits DB connection pool upon creation

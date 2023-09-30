@@ -5,14 +5,16 @@ import pathlib
 from contextlib import contextmanager
 from datetime import datetime
 from typing import Generator, List, Optional, Tuple
+from unittest.mock import patch
 from uuid import uuid4
 
 import pytest
 import pytz
-from database.db_pool import DBPool
-from database.pooler import ConnectionPooler
 from psycopg2.extensions import ISOLATION_LEVEL_READ_COMMITTED, connection
 from testcontainers.postgres import PostgresContainer
+
+from core.database import DBPool
+from core.database.pooler import ConnectionPooler
 
 SCHEMA_DIR = f"{pathlib.Path(__file__).parent.absolute()}/database/migrations/*-*.sql"
 SCHEMA_DIR = os.environ.get("SCHEMA_DIR", SCHEMA_DIR)
@@ -54,12 +56,19 @@ class Schema:
         return cls._schema_version
 
     @classmethod
-    def init_schema(pool_name: str) -> None:
+    def init_schema(cls, pool_name: str) -> None:
         with DBPool(db_pool_name=pool_name) as db, db.cursor() as curs:
             # Run the migrations one by one
             for file in Schema.get_files():
                 with open(file, "r", encoding="utf-8") as f:
                     curs.execute(f.read())
+
+
+def pytest_addoption(parser):
+    """
+    Registers an option for running pytest
+    """
+    parser.addoption("--new-db", action="store_true", default=True)
 
 
 @pytest.fixture(scope="session")
@@ -87,7 +96,7 @@ def postgres_connection(request) -> Tuple[str, dict]:
 
 
 @contextmanager
-def admin_conn(admin_pool_name: str) -> Generator[connection]:
+def admin_conn(admin_pool_name: str) -> Generator[connection, None, None]:
     """
     Creates connection to admin db pool
 
@@ -118,7 +127,7 @@ def create_db(admin_pool_name: str, db_name: str, template_db: Optional[str] = N
 
 
 @pytest.fixture(scope="session")
-def template_db(postgres_connection) -> Generator[str, str, str]:
+def template_db(postgres_connection) -> Generator[Tuple[str, str, str], None, None]:
     (admin_db_name, admin_params) = postgres_connection
 
     template_params = admin_params.copy()
@@ -152,7 +161,7 @@ def temp_db(admin_pool_name, db_name, template_db=None, drop_db=True) -> None:
 
 
 @pytest.fixture(scope="class")
-def scratch_db(template_db) -> Generator[str]:
+def scratch_db(template_db) -> Generator[str, None, None]:
     """
     This fixture relies on the template_db_params fixture and uses the template
     database to create a test specific database.
@@ -170,7 +179,14 @@ def scratch_db(template_db) -> Generator[str]:
     ConnectionPooler.register(scratch_db_name, **params)
 
     with temp_db(admin_db_name, db_name=scratch_db_name, template_db=template_db_name), patch(
-        "db_pool.DBPool.__init__.__defaults__",
+        "core.database.db_pool.DBPool.__init__.__defaults__",
         (ISOLATION_LEVEL_READ_COMMITTED, scratch_db_name),
     ):
         yield scratch_db_name
+
+
+def test_scratch_db(scratch_db) -> None:
+    """
+    This test checks if the scratch db is created and the pool is patched.
+    """
+    assert scratch_db
