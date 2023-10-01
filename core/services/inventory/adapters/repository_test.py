@@ -1,3 +1,5 @@
+# mypy: ignore-errors
+# type: ignore
 from uuid import uuid4
 
 import pytest
@@ -13,9 +15,8 @@ class TestSKURepo:
             "description": "test_description",
         }
 
-    @pytest.mark.parametrize("selected_uow", ["db_uow"], indirect=["selected_uow"])
+    @pytest.mark.parametrize("selected_uow", ["fake_uow", "db_uow"], indirect=["selected_uow"])
     def test_get(self, selected_uow: uow.AbstractUnitOfWork):
-        # run test with both fake and db to check their behavior perfectly matches
         with selected_uow as uow:
             skus = [SKU(**self.args)]
 
@@ -23,3 +24,18 @@ class TestSKURepo:
             res = uow.skus.get([self.args["id"]])
 
             assert res == skus
+
+    @pytest.mark.parametrize("selected_uow", ["fake_uow", "db_uow"], indirect=["selected_uow"])
+    def test_save(self, selected_uow: uow.AbstractUnitOfWork):
+        with selected_uow as uow:
+            sku = SKU(**self.args)
+
+            uow.skus.save([sku])
+            assert uow.skus.get([self.args["id"]]) == [sku]
+
+        # small change
+        sku.name = "Someother name"
+
+        with selected_uow as uow:
+            uow.skus.save([sku])
+            assert uow.skus.get([self.args["id"]]) == [sku]
