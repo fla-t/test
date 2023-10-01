@@ -76,47 +76,6 @@ def pytest_addoption(parser):
     parser.addoption("--new-db", action="store_true", default=True)
 
 
-@pytest.fixture(scope="session")
-def postgres_connection(request) -> Tuple[str, dict]:
-    """
-    This fixture creates a postgres container and registers it in the pool.
-    Returns the admin db name and connection params
-    """
-
-    if not request.config.getoption("--new-db"):
-        yield ("default", ConnectionPooler.get_pool("default").get_conn())
-        return
-
-    # Create a new db, the default db that is created is the postgres base admin db.
-    # that contains all the metadata for the postgres instance
-    with PostgresContainer() as pg:
-        params = {
-            "dbname": pg.POSTGRES_DB,
-            "user": pg.POSTGRES_USER,
-            "password": pg.POSTGRES_PASSWORD,
-            "host": pg.get_container_host_ip(),
-            "port": pg.port_to_expose,
-        }
-        admin_db_name = str(uuid4())
-        ConnectionPooler.register(admin_db_name, **params)
-
-        # Create a template db that will be used to create test specific dbs,
-        # this way if the schema isn't changed we don't need to run the migrations again
-        template_params = params.copy()
-        template_db_name = Schema.get_version()
-        template_params["db_name"] = template_db_name
-
-        # register the template db
-        ConnectionPooler.register(template_db_name, **template_params)
-
-        # only create a new db if it doesn't already exist.
-        if create_db(admin_db_name, template_db_name):
-            Schema.init_schema(template_db_name)
-
-        ConnectionPooler.get_pool(template_db_name).close_all_conns()
-        yield (admin_db_name, template_db_name, template_params)
-
-
 @contextmanager
 def admin_conn(admin_pool_name: str) -> Generator[connection, None, None]:
     """
@@ -167,6 +126,47 @@ def temp_db(admin_pool_name, db_name, template_db=None, drop_db=True) -> Generat
             (db_name,),
         )
         cur.execute('DROP DATABASE IF EXISTS "{}";'.format(db_name))
+
+
+@pytest.fixture(scope="session")
+def postgres_connection(request) -> Tuple[str, dict]:
+    """
+    This fixture creates a postgres container and registers it in the pool.
+    Returns the admin db name and connection params
+    """
+
+    if not request.config.getoption("--new-db"):
+        yield ("default", ConnectionPooler.get_pool("default").get_conn())
+        return
+
+    # Create a new db, the default db that is created is the postgres base admin db.
+    # that contains all the metadata for the postgres instance
+    with PostgresContainer() as pg:
+        params = {
+            "dbname": pg.POSTGRES_DB,
+            "user": pg.POSTGRES_USER,
+            "password": pg.POSTGRES_PASSWORD,
+            "host": pg.get_container_host_ip(),
+            "port": pg.port_to_expose,
+        }
+        admin_db_name = str(uuid4())
+        ConnectionPooler.register(admin_db_name, **params)
+
+        # Create a template db that will be used to create test specific dbs,
+        # this way if the schema isn't changed we don't need to run the migrations again
+        template_params = params.copy()
+        template_db_name = Schema.get_version()
+        template_params["db_name"] = template_db_name
+
+        # register the template db
+        ConnectionPooler.register(template_db_name, **template_params)
+
+        # only create a new db if it doesn't already exist.
+        if create_db(admin_db_name, template_db_name):
+            Schema.init_schema(template_db_name)
+
+        ConnectionPooler.get_pool(template_db_name).close_all_conns()
+        yield (admin_db_name, template_db_name, template_params)
 
 
 @pytest.fixture(scope="class")
