@@ -13,11 +13,10 @@ from uuid import uuid4
 
 import pytest
 import pytz
+from database import DBPool
+from database.pooler import ConnectionPooler
 from psycopg2.extensions import ISOLATION_LEVEL_READ_COMMITTED, connection
 from testcontainers.postgres import PostgresContainer
-
-from core.database import DBPool
-from core.database.pooler import ConnectionPooler
 
 SCHEMA_DIR = f"{pathlib.Path(__file__).parent.absolute()}/database/migrations/*-*.sql"
 SCHEMA_DIR = os.environ.get("SCHEMA_DIR", SCHEMA_DIR)
@@ -191,7 +190,7 @@ def scratch_db(postgres_connection) -> Generator[str, None, None]:
     # sort of a hack, I am patching the default because to send this would be require extensive
     # property handling, which i don't have time to do
     with temp_db(admin_db_name, db_name=scratch_db_name, template_db=template_db_name), patch(
-        "core.database.db_pool.DBPool.__init__.__defaults__",
+        "database.db_pool.DBPool.__init__.__defaults__",
         (ISOLATION_LEVEL_READ_COMMITTED, scratch_db_name),
     ):
         yield scratch_db_name
