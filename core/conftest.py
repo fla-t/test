@@ -189,7 +189,9 @@ def scratch_db(postgres_connection) -> Generator[str, None, None]:
 
     # sort of a hack, I am patching the default because to send this would be require extensive
     # property handling, which i don't have time to do
-    with temp_db(admin_db_name, db_name=scratch_db_name, template_db=template_db_name), patch(
+    with temp_db(
+        admin_pool_name=admin_db_name, db_name=scratch_db_name, template_db=template_db_name
+    ), patch(
         "database.db_pool.DBPool.__init__.__defaults__",
         (ISOLATION_LEVEL_READ_COMMITTED, scratch_db_name),
     ):
