@@ -1,3 +1,6 @@
+"""
+This file contains fixtures that are using to basically create a db for testing
+"""
 import glob
 import hashlib
 import os
@@ -23,6 +26,9 @@ SCHEMA_DIR = os.environ.get("SCHEMA_DIR", SCHEMA_DIR)
 class Schema:
     """
     Schema related state & methods
+
+    Schema is stored as a linked file list, each file contains a migration.
+    files are named as 1-2.sql, 2-3.sql and so on
     """
 
     _schema_filenames: List[str] = []
@@ -66,7 +72,7 @@ class Schema:
 
 def pytest_addoption(parser):
     """
-    Registers an option for running pytest
+    Registers an option for running pytest.
     """
     parser.addoption("--new-db", action="store_true", default=True)
 
@@ -82,6 +88,8 @@ def postgres_connection(request) -> Tuple[str, dict]:
         yield ("default", ConnectionPooler.get_pool("default").get_conn())
         return
 
+    # Create a new db, the default db that is created is the postgres base admin db.
+    # that contains all the metadata for the postgres instance
     with PostgresContainer() as pg:
         params = {
             "dbname": pg.POSTGRES_DB,
@@ -90,9 +98,24 @@ def postgres_connection(request) -> Tuple[str, dict]:
             "host": pg.get_container_host_ip(),
             "port": pg.port_to_expose,
         }
-        db_name = str(uuid4())
-        ConnectionPooler.register(db_name, **params)
-        yield (db_name, params)
+        admin_db_name = str(uuid4())
+        ConnectionPooler.register(admin_db_name, **params)
+
+        # Create a template db that will be used to create test specific dbs,
+        # this way if the schema isn't changed we don't need to run the migrations again
+        template_params = params.copy()
+        template_db_name = Schema.get_version()
+        template_params["db_name"] = template_db_name
+
+        # register the template db
+        ConnectionPooler.register(template_db_name, **template_params)
+
+        # only create a new db if it doesn't already exist.
+        if create_db(admin_db_name, template_db_name):
+            Schema.init_schema(template_db_name)
+
+        ConnectionPooler.get_pool(template_db_name).close_all_conns()
+        yield (admin_db_name, template_db_name, template_params)
 
 
 @contextmanager
@@ -121,34 +144,21 @@ def create_db(admin_pool_name: str, db_name: str, template_db: Optional[str] = N
             return False
         if not template_db:
             cur.execute(f'CREATE DATABASE "{db_name}";')
-        else:
-            cur.execute(f'CREATE DATABASE "{db_name}" TEMPLATE "{template_db}";')
         return True
 
 
-@pytest.fixture(scope="session")
-def template_db(postgres_connection) -> Generator[Tuple[str, str, str], None, None]:
-    (admin_db_name, admin_params) = postgres_connection
-
-    template_params = admin_params.copy()
-    template_db_name = Schema.get_version()
-    template_params["db_name"] = template_db_name
-    ConnectionPooler.register(template_db_name, **template_params)
-
-    if create_db(admin_db_name, template_db_name):
-        Schema.init_schema(template_db_name)
-
-    ConnectionPooler.get_pool(template_db_name).close_all_conns()
-    yield (admin_db_name, template_db_name, template_params)
-
-
 @contextmanager
-def temp_db(admin_pool_name, db_name, template_db=None, drop_db=True) -> None:
+def temp_db(admin_pool_name, db_name, template_db=None, drop_db=True) -> Generator[str, None, None]:
     """Create database in postgresql."""
+    # here the temp db comes into action because this function is used by a fixture which is scoped
+    # to class so using this we won't need to recreate db after every test run.
     create_db(admin_pool_name, db_name, template_db=template_db)
+
     yield db_name
     if not drop_db:
         return
+
+    # Cleanup
     with admin_conn(admin_pool_name) as ac, ac.cursor() as cur:
         cur.execute("UPDATE pg_database SET datallowconn=false WHERE datname = %s;", (db_name,))
         cur.execute(
@@ -161,13 +171,13 @@ def temp_db(admin_pool_name, db_name, template_db=None, drop_db=True) -> None:
 
 
 @pytest.fixture(scope="class")
-def scratch_db(template_db) -> Generator[str, None, None]:
+def scratch_db(postgres_connection) -> Generator[str, None, None]:
     """
     This fixture relies on the template_db_params fixture and uses the template
     database to create a test specific database.
     It yields the pool name of the scratch db and patches pool of the ConnectionPooler.
     """
-    (admin_db_name, template_db_name, template_params) = template_db
+    (admin_db_name, template_db_name, template_params) = postgres_connection
 
     params = template_params.copy()
 
@@ -178,6 +188,8 @@ def scratch_db(template_db) -> Generator[str, None, None]:
     params["dbname"] = scratch_db_name
     ConnectionPooler.register(scratch_db_name, **params)
 
+    # sort of a hack, I am patching the default because to send this would be require extensive
+    # property handling, which i don't have time to do
     with temp_db(admin_db_name, db_name=scratch_db_name, template_db=template_db_name), patch(
         "core.database.db_pool.DBPool.__init__.__defaults__",
         (ISOLATION_LEVEL_READ_COMMITTED, scratch_db_name),
