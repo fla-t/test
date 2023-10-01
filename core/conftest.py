@@ -13,7 +13,7 @@ from uuid import uuid4
 
 import pytest
 import pytz
-from database import DBPool
+from database import DBPool, DBPoolFactory
 from database.pooler import ConnectionPooler
 from psycopg2.extensions import ISOLATION_LEVEL_READ_COMMITTED, connection
 from testcontainers.postgres import PostgresContainer
@@ -102,6 +102,8 @@ def create_db(admin_pool_name: str, db_name: str, template_db: Optional[str] = N
             return False
         if not template_db:
             cur.execute(f'CREATE DATABASE "{db_name}";')
+        else:
+            cur.execute(f'CREATE DATABASE "{db_name}" TEMPLATE "{template_db}";')
         return True
 
 
@@ -156,13 +158,13 @@ def postgres_connection(request) -> Tuple[str, dict]:
         # this way if the schema isn't changed we don't need to run the migrations again
         template_params = params.copy()
         template_db_name = Schema.get_version()
-        template_params["db_name"] = template_db_name
+        template_params["dbname"] = template_db_name
 
         # register the template db
         ConnectionPooler.register(template_db_name, **template_params)
 
         # only create a new db if it doesn't already exist.
-        if create_db(admin_db_name, template_db_name):
+        if create_db(admin_db_name, template_db_name, template_db=None):
             Schema.init_schema(template_db_name)
 
         ConnectionPooler.get_pool(template_db_name).close_all_conns()

@@ -29,6 +29,18 @@ class BaseDatabase:
         finally:
             self._conn.close()
 
+    def close(self) -> None:
+        """Closes database connection."""
+        self._conn.close()
+
+    def commit(self) -> None:
+        """Commits work."""
+        self._conn.commit()
+
+    def rollback(self) -> None:
+        """Rollbacks work."""
+        self._conn.rollback()
+
     def conn(self) -> Optional[connection]:
         return self._conn
 

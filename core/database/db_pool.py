@@ -30,4 +30,4 @@ class DBPool(BaseDatabase):
 class DBPoolFactory:
     @staticmethod
     def build(isolation_level: int = ISOLATION_LEVEL_READ_COMMITTED) -> DBPool:
-        return DBPool(isolation_level)
+        return DBPool(isolation_level=isolation_level)

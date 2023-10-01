@@ -41,7 +41,6 @@ class Pool:
         """Checks if there is a pool, then returns it else creates a new pool"""
         with self._pool_lock:
             pool = self._pool
-
             if not pool:
                 pool = ThreadedConnectionPool(
                     self.min_pg_conns, self.max_pg_conns, **self.conn_args
