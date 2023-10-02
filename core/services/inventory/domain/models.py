@@ -15,19 +15,6 @@ class SKU:
 
 
 @dataclass
-class InventoryReceiving:
-    """Basically a log of inventory received, the actual quantities will be in the inventory table"""
-
-    id: str
-    cost: int
-    received_from: str
-
-    @classmethod
-    def create(cls, cost: int, received_from: str) -> "InventoryReceiving":
-        return cls(id=str(uuid4()), cost=cost, received_from=received_from)
-
-
-@dataclass
 class InventoryLog:
     """
     This is our main inventory aggregate, basically we are storing each log of entry. not a single
@@ -35,12 +22,21 @@ class InventoryLog:
     keep it afloat.
 
     If you are thinking, that computing quantities each time might be a problem, then you are right,
-    but we will probably cache that. For the sake of simiplicity, and I am not going to do that here.
+    but we will probably cache that. For the sake of simplicity, and I am not going to do that here.
+
+    This model represents a single row of inventory change. again, for simplicity i am not tracking
+    any change
 
     """
 
     id: str
     sku_id: str
-    qty: int
-    receiving_id: Optional[str]
-    sale_id: Optional[str]
+    quantity_changed: int
+
+    @classmethod
+    def create(self, sku_id: str, quantity_changed: int) -> "InventoryLog":
+        return self(id=str(uuid4()), sku_id=sku_id, quantity_changed=quantity_changed)
+
+    def __post_init__(self) -> None:
+        if self.quantity_changed == 0:
+            raise ValueError("Quantity changed cannot be zero")

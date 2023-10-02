@@ -6,7 +6,7 @@ from services.inventory.entrypoint import unit_of_work as uow
 def db_uow(scratch_db) -> uow.DBPoolUnitOFWork:
     """Creates a DB unit of work with a scratch db setted up"""
 
-    return uow.DBPoolUnitOFWork(scratch_db)
+    return uow.DBPoolUnitOFWork()
 
 
 @pytest.fixture(scope="class")
