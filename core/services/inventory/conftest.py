@@ -25,9 +25,10 @@ def selected_uow(
     so we know for sure that they are perfectly consistent
     """
 
-    if request.param == "db_uow":
-        return db_uow
-    elif request.param == "fake_uow":
-        return fake_uow
-    else:
-        raise Exception(f"Error: What's that? {request.param}")
+    match request.param:
+        case "db_uow":
+            return db_uow
+        case "fake_uow":
+            return fake_uow
+        case _:
+            raise Exception(f"Error: What's that? {request.param}")
