@@ -6,7 +6,7 @@
 
 from abc import ABC
 
-from database.db_pool import DBPool, DBPoolFactory
+from database.db_pool import DBPoolFactory
 from psycopg2.extensions import ISOLATION_LEVEL_READ_COMMITTED
 from services.inventory.adapters import repository as repo
 
