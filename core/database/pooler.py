@@ -8,7 +8,7 @@ from psycopg2.extensions import connection
 from psycopg2.pool import ThreadedConnectionPool
 
 MIN_PG_CONNS = int(os.environ.get("POSTGRES_MIN_POOL_CONNS", 2))
-MAX_PG_CONNS = int(os.environ.get("POSTGRES_MAX_POOL_CONNS", 5))
+MAX_PG_CONNS = int(os.environ.get("POSTGRES_MAX_POOL_CONNS", 10))
 MAX_PG_CONNECT_RETRIES = int(os.environ.get("POSTGRES_MAX_CONN_RETRIES", 5))
 
 
