@@ -12,13 +12,6 @@ class SalesByTimePeriod:
     sales: int
 
 
-@dataclass
-class SalesComparisonByTimePeriod:
-    period: date
-    revenue_a: int
-    revenue_b: int
-
-
 def sales_by_time_period(
     uow: uow.DBPoolUnitOfWork,
     time_period: str,
