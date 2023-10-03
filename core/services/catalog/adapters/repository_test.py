@@ -3,7 +3,7 @@
 from uuid import uuid4
 
 import pytest
-from services.catalog.domain.models import SKU, Category
+from services.catalog.domain.models import Category, Sku
 from services.catalog.entrypoint import unit_of_work as uow
 
 
@@ -45,17 +45,27 @@ class TestSKURepo:
     @pytest.mark.parametrize("selected_uow", ["fake_uow", "db_uow"], indirect=["selected_uow"])
     def test_get(self, selected_uow: uow.AbstractUnitOfWork):
         with selected_uow as uow:
-            skus = [SKU(**self.args)]
+            skus = [Sku(**self.args)]
 
-            uow.skus.save([SKU(**self.args)])
+            uow.skus.save([Sku(**self.args)])
             res = uow.skus.get([self.args["id"]])
+
+            assert res == skus
+
+    @pytest.mark.parametrize("selected_uow", ["fake_uow", "db_uow"], indirect=["selected_uow"])
+    def test_get_by_categories(self, selected_uow: uow.AbstractUnitOfWork):
+        with selected_uow as uow:
+            skus = [Sku(**self.args)]
+
+            uow.skus.save([Sku(**self.args)])
+            res = uow.skus.get_by_categories([self.args["category_id"]])
 
             assert res == skus
 
     @pytest.mark.parametrize("selected_uow", ["fake_uow", "db_uow"], indirect=["selected_uow"])
     def test_save(self, selected_uow: uow.AbstractUnitOfWork):
         with selected_uow as uow:
-            sku = SKU(**self.args)
+            sku = Sku(**self.args)
 
             uow.skus.save([sku])
             assert uow.skus.get([self.args["id"]]) == [sku]

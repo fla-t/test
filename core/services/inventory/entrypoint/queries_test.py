@@ -2,10 +2,10 @@ from uuid import uuid4
 
 from services.inventory.domain.models import InventoryLog
 from services.inventory.entrypoint import queries as qry
-from services.inventory.entrypoint.unit_of_work import DBPoolUnitOFWork
+from services.inventory.entrypoint.unit_of_work import DBPoolUnitOfWork
 
 
-def test_inventory_by_skus(db_uow: DBPoolUnitOFWork, drop_inventory_fk):
+def test_inventory_by_skus(db_uow: DBPoolUnitOfWork, drop_inventory_fk):
     # seed some skus
     sku_ids = [str(uuid4()) for _ in range(2)]
     inventory_logs = [

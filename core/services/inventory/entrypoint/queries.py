@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import List
 
-from services.inventory.entrypoint.unit_of_work import DBPoolUnitOFWork
+from services.inventory.entrypoint.unit_of_work import DBPoolUnitOfWork
 
 
 @dataclass
@@ -10,7 +10,7 @@ class SkuInventoryDTO:
     quantity: int
 
 
-def inventory_by_skus(uow: DBPoolUnitOFWork, sku_ids: List[str]) -> List[SkuInventoryDTO]:
+def inventory_by_skus(uow: DBPoolUnitOfWork, sku_ids: List[str]) -> List[SkuInventoryDTO]:
     """
     Remember our domain object? inventory log, this is the read side of that aggregate.
 

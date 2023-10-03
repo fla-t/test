@@ -5,7 +5,7 @@ from typing import Dict, List
 from database.db_pool import DBPool
 from psycopg2.extensions import cursor as pg_cursor
 from psycopg2.extras import DictCursor, execute_values
-from services.catalog.domain.models import SKU, Category
+from services.catalog.domain.models import Category, Sku
 
 
 class AbstractCategoryRepo(ABC):
@@ -86,11 +86,15 @@ class AbstractSKURepo(ABC):
     """Abstract repo for persisting SKUs in the Database"""
 
     @abstractmethod
-    def save(self, skus: List[SKU]) -> None:
+    def save(self, skus: List[Sku]) -> None:
         raise NotImplementedError
 
     @abstractmethod
-    def get(self, sku_ids: List[str]) -> List[SKU]:
+    def get(self, sku_ids: List[str]) -> List[Sku]:
+        raise NotImplementedError
+
+    @abstractmethod
+    def get_by_categories(self, category_ids: List[str]) -> List[Sku]:
         raise NotImplementedError
 
 
@@ -98,14 +102,17 @@ class FakeSKURepo(AbstractSKURepo):
     """Fake repo that is used for testing"""
 
     def __init__(self) -> None:
-        self.skus: Dict[str, SKU] = {}
+        self.skus: Dict[str, Sku] = {}
 
-    def save(self, skus: List[SKU]) -> None:
+    def save(self, skus: List[Sku]) -> None:
         for sku in skus:
             self.skus[sku.id] = deepcopy(sku)
 
-    def get(self, sku_ids: List[str]) -> List[SKU]:
+    def get(self, sku_ids: List[str]) -> List[Sku]:
         return [self.skus[sku_id] for sku_id in sku_ids]
+
+    def get_by_categories(self, category_ids: List[str]) -> List[Sku]:
+        return [sku for sku in self.skus.values() if sku.category_id in category_ids]
 
 
 class SKURepo(AbstractSKURepo):
@@ -121,7 +128,7 @@ class SKURepo(AbstractSKURepo):
     def read_cursor(self) -> pg_cursor:
         return self.cursor(cursor_factory=DictCursor)
 
-    def save(self, skus: List[SKU]) -> None:
+    def save(self, skus: List[Sku]) -> None:
         sql = """
             insert into skus (id, category_id, name, description)
             values %s
@@ -140,7 +147,7 @@ class SKURepo(AbstractSKURepo):
         with self.cursor() as curs:
             execute_values(curs, sql, args)
 
-    def get(self, sku_ids: List[str]) -> List[SKU]:
+    def get(self, sku_ids: List[str]) -> List[Sku]:
         sql = """
             select
                 id,
@@ -156,7 +163,32 @@ class SKURepo(AbstractSKURepo):
             rows = curs.fetchall()
 
         return [
-            SKU(
+            Sku(
+                id=row["id"],
+                category_id=row["category_id"],
+                name=row["name"],
+                description=row["description"],
+            )
+            for row in rows
+        ]
+
+    def get_by_categories(self, category_ids: List[str]) -> List[Sku]:
+        sql = """
+            select
+                id,
+                category_id,
+                name,
+                description
+            from skus
+            where category_id = any(%s::uuid[])
+            ;
+        """
+        with self.read_cursor() as curs:
+            curs.execute(sql, [category_ids])
+            rows = curs.fetchall()
+
+        return [
+            Sku(
                 id=row["id"],
                 category_id=row["category_id"],
                 name=row["name"],

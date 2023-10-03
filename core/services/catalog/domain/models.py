@@ -13,12 +13,12 @@ class Category:
 
 
 @dataclass
-class SKU:
+class Sku:
     id: str
     category_id: str
     name: str
     description: str
 
     @classmethod
-    def create(cls, cat_id: str, name: str, description: str) -> "SKU":
+    def create(cls, cat_id: str, name: str, description: str) -> "Sku":
         return cls(id=str(uuid4()), category_id=cat_id, name=name, description=description)

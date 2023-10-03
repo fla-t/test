@@ -3,10 +3,10 @@ from services.catalog.entrypoint import unit_of_work as uow
 
 
 @pytest.fixture(scope="class")
-def db_uow(scratch_db) -> uow.DBPoolUnitOFWork:
+def db_uow(scratch_db) -> uow.DBPoolUnitOfWork:
     """Creates a DB unit of work with a scratch db setted up"""
 
-    return uow.DBPoolUnitOFWork()
+    return uow.DBPoolUnitOfWork()
 
 
 @pytest.fixture(scope="class")
@@ -18,7 +18,7 @@ def fake_uow() -> uow.FakeUnitOfWork:
 
 @pytest.fixture(scope="function")
 def selected_uow(
-    request, db_uow: uow.DBPoolUnitOFWork, fake_uow: uow.FakeUnitOfWork
+    request, db_uow: uow.DBPoolUnitOfWork, fake_uow: uow.FakeUnitOfWork
 ) -> uow.AbstractUnitOfWork:
     """
     This is so we can test both fake and db repo at the same time,
@@ -35,7 +35,7 @@ def selected_uow(
 
 
 @pytest.fixture(scope="class")
-def drop_skus_fk(db_uow: uow.DBPoolUnitOFWork):
+def drop_skus_fk(db_uow: uow.DBPoolUnitOfWork):
     sql = """
         alter table skus drop constraint skus_category_id_fkey;
     """

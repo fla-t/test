@@ -12,7 +12,7 @@ def test_create_sku(selected_uow: AbstractUnitOfWork, drop_skus_fk):
     sku_id = cmd.create_sku(selected_uow, category_id, "name", "description")
 
     with selected_uow as uow:
-        assert uow.skus.get([sku_id]) == [mdl.SKU(sku_id, category_id, "name", "description")]
+        assert uow.skus.get([sku_id]) == [mdl.Sku(sku_id, category_id, "name", "description")]
 
 
 @pytest.mark.parametrize("selected_uow", ["fake_uow", "db_uow"], indirect=["selected_uow"])
@@ -23,14 +23,14 @@ def test_update_sku(selected_uow: AbstractUnitOfWork, drop_skus_fk):
 
     with selected_uow as uow:
         sku = uow.skus.get([sku_id])
-        assert sku == [mdl.SKU(sku_id, "name", "description")]
+        assert sku == [mdl.Sku(sku_id, "name", "description")]
 
     new_cat_id = str(uuid4())
     sku_id = cmd.update_sku(selected_uow, sku_id, new_cat_id, "new_name", "new_description")
 
     with selected_uow as uow:
         assert uow.skus.get([sku_id]) == [
-            mdl.SKU(sku_id, new_cat_id, "new_name", "new description")
+            mdl.Sku(sku_id, new_cat_id, "new_name", "new description")
         ]
 
 

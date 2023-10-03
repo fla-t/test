@@ -27,11 +27,11 @@ class AbstractUnitOfWork(ABC):
 DEFAULT_DB_POOL_FACTORY = DBPoolFactory()
 
 
-class DBPoolUnitOFWork(AbstractUnitOfWork):
+class DBPoolUnitOfWork(AbstractUnitOfWork):
     def __init__(self, db_pool_factory: DBPoolFactory = DEFAULT_DB_POOL_FACTORY):
         self.db_pool_factory = db_pool_factory
 
-    def __enter__(self) -> "DBPoolUnitOFWork":
+    def __enter__(self) -> "DBPoolUnitOfWork":
         self.db_pool = self.db_pool_factory.build(ISOLATION_LEVEL_READ_COMMITTED)
 
         self.sales = repo.SalesRepo(self.db_pool)
