@@ -32,8 +32,9 @@ class FakeCatalogService(AbstractCatalogService):
     def get_skus(self, sku_ids: List[str]) -> List[Sku]:
         return [self.skus[sku_id] for sku_id in sku_ids]
 
-    def add_sku(self, sku: Sku) -> None:
-        self.skus[sku.id] = deepcopy(sku)
+    def add_skus(self, skus: List[Sku]) -> None:
+        for sku in skus:
+            self.skus[sku.id] = deepcopy(sku)
 
 
 class CatalogService(AbstractCatalogService):

@@ -10,8 +10,7 @@ def test_get_skus(fake_cat_service: acl.FakeCatalogService):
         acl.Sku(id=str(uuid4()), name="acl_sku_3"),
     ]
 
-    for sku in skus:
-        fake_cat_service.add_sku(sku)
+    fake_cat_service.add_skus(skus)
 
     res = fake_cat_service.get_skus([sku.id for sku in skus])
     assert res == skus

@@ -1,16 +1,22 @@
 from dataclasses import dataclass
 from typing import List
 
+from services.inventory.entrypoint import anti_corruption as acl
 from services.inventory.entrypoint.unit_of_work import DBPoolUnitOfWork
 
 
 @dataclass
 class SkuInventoryDTO:
-    sku_id: str
+    id: str
+    name: str
     quantity: int
 
 
-def inventory_by_skus(uow: DBPoolUnitOfWork, sku_ids: List[str]) -> List[SkuInventoryDTO]:
+def inventory_by_skus(
+    uow: DBPoolUnitOfWork,
+    cat_svc: acl.AbstractCatalogService,
+    sku_ids: List[str],
+) -> List[SkuInventoryDTO]:
     """
     Remember our domain object? inventory log, this is the read side of that aggregate.
 
@@ -31,17 +37,30 @@ def inventory_by_skus(uow: DBPoolUnitOfWork, sku_ids: List[str]) -> List[SkuInve
         curs.execute(sql, {"sku_ids": sku_ids})
         rows = curs.fetchall()
 
-    return [SkuInventoryDTO(sku_id=row["sku_id"], quantity=row["quantity"]) for row in rows]
+    acl_sku_dict = {sku.id: sku for sku in cat_svc.get_skus(list(sku_ids))}
+
+    return [
+        SkuInventoryDTO(
+            id=row["sku_id"],
+            name=acl_sku_dict[row["sku_id"]].name,
+            quantity=row["quantity"],
+        )
+        for row in rows
+    ]
 
 
-def inventory_below_threshold(uow: DBPoolUnitOfWork, threshold: int) -> List[SkuInventoryDTO]:
+def inventory_below_threshold(
+    uow: DBPoolUnitOfWork,
+    cat_svc: acl.AbstractCatalogService,
+    threshold: int,
+) -> List[SkuInventoryDTO]:
     sql = """
         select
             sku_id,
             sum(quantity_changed) as quantity
         from inventory_logs
         group by sku_id
-        having sum(quantity_changed) < %(threshold)s
+        having sum(quantity_changed) <= %(threshold)s
         ;
     """
 
@@ -49,4 +68,15 @@ def inventory_below_threshold(uow: DBPoolUnitOfWork, threshold: int) -> List[Sku
         curs.execute(sql, {"threshold": threshold})
         rows = curs.fetchall()
 
-    return [SkuInventoryDTO(sku_id=row["sku_id"], quantity=row["quantity"]) for row in rows]
+    # set to avoid duplication
+    sku_ids = {row["sku_id"] for row in rows}
+    acl_sku_dict = {sku.id: sku for sku in cat_svc.get_skus(list(sku_ids))}
+
+    return [
+        SkuInventoryDTO(
+            id=row["sku_id"],
+            name=acl_sku_dict[row["sku_id"]].name,
+            quantity=row["quantity"],
+        )
+        for row in rows
+    ]
