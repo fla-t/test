@@ -30,13 +30,13 @@ class TestSalesRepo:
                     id=str(uuid4()),
                     inventory_log_id=str(uuid4()),
                     price=100,
-                    created_at=datetime(2021, 1, 1, tzinfo=timezone.utc),
+                    created_at=datetime(2022, 1, 1, tzinfo=timezone.utc),
                 ),
                 Sale(
                     id=str(uuid4()),
                     inventory_log_id=str(uuid4()),
                     price=100,
-                    created_at=datetime(2021, 1, 2, tzinfo=timezone.utc),
+                    created_at=datetime(2022, 1, 2, tzinfo=timezone.utc),
                 ),
             ]
 
@@ -74,7 +74,5 @@ class TestSalesRepo:
 
         with selected_uow as uow:
             for start, end in combinations([1, 2, 3], r=2):
-                # assert uow.sales.get_sales_by_date_range(
-                #     date(2021, 1, start), date(2021, 1, end)
-                # ) == [sales[start - 1], sales[end - 1]]
-                print(uow.sales.get_sales_by_date_range(date(2021, 1, start), date(2021, 1, end)))
+                res = uow.sales.get_sales_by_date_range(date(2021, 1, start), date(2021, 1, end))
+                assert res == sales[start - 1 : end]

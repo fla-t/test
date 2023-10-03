@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from copy import deepcopy
-from datetime import date, datetime
-from typing import Dict, List
+from datetime import date
+from typing import List
 
 from database.db_pool import DBPool
 from psycopg2.extensions import cursor as pg_cursor
@@ -74,7 +74,7 @@ class SalesRepo(AbstractSalesRepo):
                 id,
                 inventory_log_id,
                 price,
-                created_at at time zone 'utc' as created_at
+                created_at
             from sales
             where id = any(%s::uuid[])
             ;
@@ -100,10 +100,10 @@ class SalesRepo(AbstractSalesRepo):
                 id,
                 inventory_log_id,
                 price,
-                created_at at time zone 'utc' as created_at
+                created_at
             from sales
             where created_at::date between %s::date and %s::date
-            order by created_at desc
+            order by created_at asc
             ;
         """
 

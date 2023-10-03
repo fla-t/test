@@ -1,5 +1,3 @@
-from uuid import uuid4
-
 import pytest
 from services.inventory.domain import models as mdl
 from services.inventory.entrypoint import commands as cmd
