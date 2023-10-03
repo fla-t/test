@@ -5,7 +5,81 @@ from typing import Dict, List
 from database.db_pool import DBPool
 from psycopg2.extensions import cursor as pg_cursor
 from psycopg2.extras import DictCursor, execute_values
-from services.catalog.domain.models import SKU
+from services.catalog.domain.models import SKU, Category
+
+
+class AbstractCategoryRepo(ABC):
+    """Abstract repo for persisting Categories in the Database"""
+
+    @abstractmethod
+    def save(self, categories: List[Category]) -> None:
+        raise NotImplementedError
+
+    @abstractmethod
+    def get(self, category_ids: List[str]) -> List[Dict]:
+        raise NotImplementedError
+
+
+class FakeCategoryRepo(AbstractCategoryRepo):
+    def __init__(self) -> None:
+        self.categories: Dict[str, Category] = {}
+
+    def save(self, categories: List[Category]) -> None:
+        for category in categories:
+            self.categories[category.id] = deepcopy(category)
+
+    def get(self, category_ids: List[str]) -> List[Category]:
+        return [self.categories[category_id] for category_id in category_ids]
+
+
+class CategoryRepo(AbstractCategoryRepo):
+    def __init__(self, db_pool: DBPool):
+        super().__init__()
+        self.db_pool = db_pool
+
+    def cursor(self, *args, **kwargs) -> pg_cursor:
+        return self.db_pool.cursor(*args, **kwargs)
+
+    def read_cursor(self) -> pg_cursor:
+        return self.cursor(cursor_factory=DictCursor)
+
+    def save(self, categories: List[Category]) -> None:
+        sql = """
+            insert into categories (id, name)
+            values %s
+            on conflict (id) do update
+            set name = excluded.name
+            ;
+        """
+
+        args = []
+        for category in categories:
+            args.append((category.id, category.name))
+
+        with self.cursor() as curs:
+            execute_values(curs, sql, args)
+
+    def get(self, category_ids: List[str]) -> List[Category]:
+        sql = """
+            select
+                id,
+                name
+            from categories
+            where id = any(%s::uuid[])
+            ;
+        """
+
+        with self.read_cursor() as curs:
+            curs.execute(sql, [category_ids])
+            rows = curs.fetchall()
+
+        return [
+            Category(
+                id=row["id"],
+                name=row["name"],
+            )
+            for row in rows
+        ]
 
 
 class AbstractSKURepo(ABC):
@@ -49,10 +123,11 @@ class SKURepo(AbstractSKURepo):
 
     def save(self, skus: List[SKU]) -> None:
         sql = """
-            insert into skus (id, name, description)
+            insert into skus (id, category_id, name, description)
             values %s
             on conflict (id) do update
             set
+                category_id = excluded.category_id,
                 name = excluded.name,
                 description = excluded.description
             ;
@@ -60,7 +135,7 @@ class SKURepo(AbstractSKURepo):
 
         args = []
         for sku in skus:
-            args.append((sku.id, sku.name, sku.description))
+            args.append((sku.id, sku.category_id, sku.name, sku.description))
 
         with self.cursor() as curs:
             execute_values(curs, sql, args)
@@ -69,6 +144,7 @@ class SKURepo(AbstractSKURepo):
         sql = """
             select
                 id,
+                category_id,
                 name,
                 description
             from skus
@@ -79,4 +155,12 @@ class SKURepo(AbstractSKURepo):
             curs.execute(sql, [sku_ids])
             rows = curs.fetchall()
 
-        return [SKU(id=row["id"], name=row["name"], description=row["description"]) for row in rows]
+        return [
+            SKU(
+                id=row["id"],
+                category_id=row["category_id"],
+                name=row["name"],
+                description=row["description"],
+            )
+            for row in rows
+        ]

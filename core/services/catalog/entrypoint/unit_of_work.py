@@ -13,6 +13,7 @@ from services.catalog.adapters import repository as repo
 
 class AbstractUnitOfWork(ABC):
     skus: repo.AbstractSKURepo
+    categories: repo.AbstractCategoryRepo
 
     def __enter__(self):
         return self
@@ -32,6 +33,7 @@ class DBPoolUnitOFWork(AbstractUnitOfWork):
         self.db_pool = self.db_pool_factory.build(ISOLATION_LEVEL_READ_COMMITTED)
 
         self.skus = repo.SKURepo(self.db_pool)
+        self.categories = repo.CategoryRepo(self.db_pool)
 
         return self
 
@@ -42,7 +44,9 @@ class DBPoolUnitOFWork(AbstractUnitOfWork):
 
 class FakeUnitOfWork(AbstractUnitOfWork):
     skus: repo.FakeSKURepo
+    categories: repo.FakeCategoryRepo
 
     def __init__(self) -> None:
         super().__init__()
         self.skus = repo.FakeSKURepo()
+        self.categories = repo.FakeCategoryRepo()

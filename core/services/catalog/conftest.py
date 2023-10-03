@@ -32,3 +32,13 @@ def selected_uow(
             return fake_uow
         case _:
             raise Exception(f"Error: What's that? {request.param}")
+
+
+@pytest.fixture(scope="class")
+def drop_skus_fk(db_uow: uow.DBPoolUnitOFWork):
+    sql = """
+        alter table skus drop constraint skus_category_id_fkey;
+    """
+
+    with db_uow, db_uow.db_pool.cursor() as curs:
+        curs.execute(sql)
