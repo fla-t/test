@@ -7,7 +7,10 @@
 from abc import ABC
 
 from database.db_pool import DBPoolFactory
-from psycopg2.extensions import ISOLATION_LEVEL_READ_COMMITTED
+from psycopg2.extensions import (
+    ISOLATION_LEVEL_READ_COMMITTED,
+    ISOLATION_LEVEL_REPEATABLE_READ,
+)
 from services.inventory.adapters import repository as repo
 
 
@@ -21,6 +24,9 @@ class AbstractUnitOfWork(ABC):
     def __exit__(self, *args):
         pass
 
+    def __call__(self, *args, **kwds):
+        return self
+
 
 DEFAULT_DB_POOL_FACTORY = DBPoolFactory()
 
@@ -31,10 +37,11 @@ class DBPoolUnitOFWork(AbstractUnitOfWork):
 
     def __enter__(self) -> "DBPoolUnitOFWork":
         self.db_pool = self.db_pool_factory.build(ISOLATION_LEVEL_READ_COMMITTED)
+
         self.skus = repo.SKURepo(self.db_pool)
         self.inventory_logs = repo.InventoryLogsRepo(self.db_pool)
 
-        return super().__enter__()
+        return self
 
     def __exit__(self, *args) -> None:
         super().__exit__(*args)
