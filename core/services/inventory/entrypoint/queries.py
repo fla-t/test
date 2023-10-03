@@ -32,3 +32,21 @@ def inventory_by_skus(uow: DBPoolUnitOfWork, sku_ids: List[str]) -> List[SkuInve
         rows = curs.fetchall()
 
     return [SkuInventoryDTO(sku_id=row["sku_id"], quantity=row["quantity"]) for row in rows]
+
+
+def inventory_below_threshold(uow: DBPoolUnitOfWork, threshold: int) -> List[SkuInventoryDTO]:
+    sql = """
+        select
+            sku_id,
+            sum(quantity_changed) as quantity
+        from inventory_logs
+        group by sku_id
+        having sum(quantity_changed) < %(threshold)s
+        ;
+    """
+
+    with uow, uow.db_pool.dict_cursor() as curs:
+        curs.execute(sql, {"threshold": threshold})
+        rows = curs.fetchall()
+
+    return [SkuInventoryDTO(sku_id=row["sku_id"], quantity=row["quantity"]) for row in rows]

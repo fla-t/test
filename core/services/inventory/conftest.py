@@ -1,4 +1,5 @@
 import pytest
+from services.inventory.entrypoint import anti_corruption as acl
 from services.inventory.entrypoint import unit_of_work as uow
 
 
@@ -42,3 +43,8 @@ def drop_inventory_fk(db_uow: uow.DBPoolUnitOfWork):
 
     with db_uow, db_uow.db_pool.cursor() as curs:
         curs.execute(sql)
+
+
+@pytest.fixture(scope="class")
+def fake_cat_service() -> acl.FakeCatalogService:
+    return acl.FakeCatalogService()
