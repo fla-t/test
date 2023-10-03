@@ -3,7 +3,7 @@ from copy import deepcopy
 from typing import Dict, List
 
 from database.db_pool import DBPool
-from psycopg2.extensions import cursor
+from psycopg2.extensions import cursor as pg_cursor
 from psycopg2.extras import DictCursor, execute_values
 from services.inventory.domain.models import SKU, InventoryLog
 
@@ -41,17 +41,15 @@ class SKURepo(AbstractSKURepo):
         super().__init__()
         self.db_pool = db_pool
 
-    def cursor(self, *args, **kwargs) -> cursor:
+    def cursor(self, *args, **kwargs) -> pg_cursor:
         return self.db_pool.cursor(*args, **kwargs)
 
-    def read_cursor(self):
+    def read_cursor(self) -> pg_cursor:
         return self.cursor(cursor_factory=DictCursor)
 
     def save(self, skus: List[SKU]) -> None:
         sql = """
-            insert into skus (
-                id, name, description
-            )
+            insert into skus (id, name, description)
             values %s
             on conflict (id) do update
             set
@@ -118,10 +116,10 @@ class InventoryLogsRepo(AbstractInventoryLogsRepo):
         super().__init__()
         self.db_pool = db_pool
 
-    def cursor(self, *args, **kwargs) -> cursor:
+    def cursor(self, *args, **kwargs) -> pg_cursor:
         return self.db_pool.cursor(*args, **kwargs)
 
-    def read_cursor(self):
+    def read_cursor(self) -> pg_cursor:
         return self.cursor(cursor_factory=DictCursor)
 
     def add(self, inventory_logs: List[InventoryLog]) -> None:
