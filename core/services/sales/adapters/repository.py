@@ -102,7 +102,7 @@ class SalesRepo(AbstractSalesRepo):
                 price,
                 created_at
             from sales
-            where created_at::date between %s::date and %s::date
+            where created_at at time zone 'utc' between %s::date and %s::date
             order by created_at asc
             ;
         """
