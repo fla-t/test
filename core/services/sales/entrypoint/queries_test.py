@@ -3,7 +3,7 @@ from uuid import uuid4
 
 import pytest
 from services.sales.domain.models import Sale
-from services.sales.entrypoint import commands as cmd
+from services.sales.entrypoint import anti_corruption as acl
 from services.sales.entrypoint import queries as qry
 from services.sales.entrypoint import unit_of_work as uow
 
@@ -77,3 +77,74 @@ def test_sales_by_time_period_by_day(
     assert len(res) == 1
     assert res[0].period == date(2021, 1, 1)  # thats where the year started
     assert res[0].sales == 332
+
+
+def test_sales_by_sku(
+    db_uow: uow.DBPoolUnitOfWork,
+    fake_inv_service: acl.FakeInventoryService,
+    drop_sales_fk,
+    setup_for_sales_by_time_period,
+):
+    sales = [
+        Sale(
+            id=str(uuid4()),
+            inventory_log_id=str(uuid4()),
+            price=100,
+            created_at=datetime(2021, 1, 1, tzinfo=timezone.utc),
+        )
+    ]
+    with db_uow as uow:
+        uow.sales.add(sales)
+
+    sku_id = str(uuid4())
+    fake_inv_service.add_inventory_log_to_sku_id(sku_id, [sales[0].inventory_log_id])
+
+    res = qry.sales_by_sku(
+        db_uow,
+        fake_inv_service,
+        time_period="day",
+        sku_id=sku_id,
+        start=date(2021, 1, 1),
+        end=date(2021, 1, 3),
+    )
+
+    assert len(res) == 1
+    assert res[0].sales == 100
+    assert res[0].period == date(2021, 1, 1)
+
+
+def test_sales_by_category(
+    db_uow: uow.DBPoolUnitOfWork,
+    fake_inv_service: acl.FakeInventoryService,
+    fake_cat_service: acl.FakeCatalogService,
+    drop_sales_fk,
+    setup_for_sales_by_time_period,
+):
+    sales = [
+        Sale(
+            id=str(uuid4()),
+            inventory_log_id=str(uuid4()),
+            price=100,
+            created_at=datetime(2021, 1, 1, tzinfo=timezone.utc),
+        )
+    ]
+    with db_uow as uow:
+        uow.sales.add(sales)
+
+    sku_id = str(uuid4())
+    cat_id = str(uuid4())
+    fake_inv_service.add_inventory_log_to_sku_id(sku_id, [sales[0].inventory_log_id])
+    fake_cat_service.add_skus(cat_id, [sku_id])
+
+    res = qry.sales_by_sku(
+        db_uow,
+        fake_inv_service,
+        time_period="day",
+        sku_id=sku_id,
+        start=date(2021, 1, 1),
+        end=date(2021, 1, 3),
+    )
+
+    assert len(res) == 1
+    assert res[0].sales == 100
+    assert res[0].period == date(2021, 1, 1)

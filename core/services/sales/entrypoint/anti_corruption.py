@@ -18,25 +18,25 @@ class AbstractInventoryService(ABC):
 class FakeInventoryService(AbstractInventoryService):
     def __init__(self) -> None:
         super().__init__()
-        self.inventory_log_to_sku_id: Dict[str, str] = {}
+        self.sku_ids_to_inventory_logs: Dict[str, List[str]] = defaultdict(list)
 
-    def add_inventory_log_to_sku_id(self, sku_id: str, inventory_log_id: str) -> None:
-        self.inventory_log_to_sku_id[inventory_log_id] = sku_id
+    def add_inventory_log_to_sku_id(self, sku_id: str, inventory_log_ids: List[str]) -> None:
+        self.sku_ids_to_inventory_logs[sku_id].extend(inventory_log_ids)
 
     def inventory_log_ids_by_sku(self, sku_ids: List[str]) -> List[str]:
-        return [
-            inventory_log_id
-            for inventory_log_id, sku_id in self.inventory_log_to_sku_id.items()
-            if sku_id in sku_ids
-        ]
+        to_return = []
+        for sku_id in sku_ids:
+            to_return.extend(self.sku_ids_to_inventory_logs[sku_id])
+
+        return to_return
 
 
 class InventoryService(AbstractInventoryService):
-    def inventory_log_ids_by_sku(self, sku_id: str) -> List[str]:
+    def inventory_log_ids_by_sku(self, sku_ids: List[str]) -> List[str]:
         _inv_uow = inv_uow.DBPoolUnitOfWork()
 
         with _inv_uow:
-            inventory_logs = _inv_uow.inventory_logs.get_by_skus(sku_id)
+            inventory_logs = _inv_uow.inventory_logs.get_by_skus(sku_ids)
 
         return [inventory_log.id for inventory_log in inventory_logs]
 

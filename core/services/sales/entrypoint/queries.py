@@ -61,7 +61,7 @@ def sales_by_sku(
 ) -> List[SalesByTimePeriod]:
     """Gets the sales by sku by using a acl to get information from the inventory service"""
 
-    inventory_log_ids = inv_svc.inventory_log_ids_by_sku(sku_id)
+    inventory_log_ids = inv_svc.inventory_log_ids_by_sku([sku_id])
     sales = sales_by_time_period(
         uow,
         time_period=time_period,
