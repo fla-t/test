@@ -20,7 +20,7 @@ class AbstractUnitOfWork(ABC):
     def __exit__(self, *args):
         pass
 
-    def __call__(self, *args, **kwds):
+    def __call__(self, *args, **kwargs):
         return self
 
 
