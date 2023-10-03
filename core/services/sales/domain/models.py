@@ -20,7 +20,7 @@ class Sale:
     created_at: datetime
 
     @classmethod
-    def create(cls, inventory_log_id: int, price: int) -> "Sale":
+    def create(cls, inventory_log_id: str, price: int) -> "Sale":
         return cls(
             id=str(uuid4()), inventory_log_id=inventory_log_id, price=price, created_at=now_in_utc()
         )
