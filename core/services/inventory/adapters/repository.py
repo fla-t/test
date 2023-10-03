@@ -19,6 +19,10 @@ class AbstractInventoryLogsRepo(ABC):
     def get(self, inventory_log_ids: List[str]) -> List[InventoryLog]:
         raise NotImplementedError
 
+    @abstractmethod
+    def get_by_skus(self, sku_id: str) -> List[InventoryLog]:
+        raise NotImplementedError
+
 
 class FakeInventoryLogsRepo(AbstractInventoryLogsRepo):
     def __init__(self):
@@ -35,6 +39,9 @@ class FakeInventoryLogsRepo(AbstractInventoryLogsRepo):
                 to_return.append(deepcopy(il))
 
         return to_return
+
+    def get_by_skus(self, sku_ids: List[str]) -> List[InventoryLog]:
+        return [il for il in self.inventory_logs if il.sku_id in sku_ids]
 
 
 class InventoryLogsRepo(AbstractInventoryLogsRepo):
@@ -75,6 +82,27 @@ class InventoryLogsRepo(AbstractInventoryLogsRepo):
         """
         with self.read_cursor() as curs:
             curs.execute(sql, [inventory_logs])
+            rows = curs.fetchall()
+
+        return [
+            InventoryLog(
+                id=row["id"], sku_id=row["sku_id"], quantity_changed=row["quantity_changed"]
+            )
+            for row in rows
+        ]
+
+    def get_by_skus(self, sku_ids: List[str]) -> List[InventoryLog]:
+        sql = """
+            select
+                id,
+                sku_id,
+                quantity_changed
+            from inventory_logs
+            where sku_id = any(%s::uuid[])
+            ;
+        """
+        with self.read_cursor() as curs:
+            curs.execute(sql, [sku_ids])
             rows = curs.fetchall()
 
         return [
