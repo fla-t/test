@@ -59,3 +59,30 @@ That has not been dockerized yet.
 So you will need something like Postgres.app or Postgres installed on your machine.
 
 After that run the tests
+
+
+## Questions
+
+### If there are libraries essential for the project configuration, list them and explain the reason.
+Right now there is only one which is pg-migrator, which is a nodejs module that helps in running
+migrations on the database
+
+
+
+### If there are libraries that you think might be necessary for project configuration, list them and explain the reason.
+I can't think of anything
+
+### The timezone of the data and the user's timezone may be different from your located timezone. What should be considered when handling Datetime using Python and Database? (Explanation or code example)
+Everything should be stored in datetime/Timestamp with time zone format, thus we are storing the
+timezone along with the timestamp and thus remove and ambiguity for errors
+
+I have made a utility function that I am making use of in the code, which is giving my the now() time
+in UTC timezone, which is the standard for all the timezones. now() is the most used function in the
+datetime library and it is best to make a wrapper function that ensures timezone will always be utc
+
+```python
+def now_in_utc() -> datetime:
+    """Current time in UTC time zone"""
+
+    return datetime.now(timezone.utc)
+```
