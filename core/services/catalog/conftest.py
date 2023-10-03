@@ -1,5 +1,5 @@
 import pytest
-from services.inventory.entrypoint import unit_of_work as uow
+from services.catalog.entrypoint import unit_of_work as uow
 
 
 @pytest.fixture(scope="class")
@@ -32,13 +32,3 @@ def selected_uow(
             return fake_uow
         case _:
             raise Exception(f"Error: What's that? {request.param}")
-
-
-@pytest.fixture(scope="class")
-def drop_inventory_fk(db_uow: uow.DBPoolUnitOFWork):
-    sql = """
-        alter table inventory_logs drop constraint inventory_logs_sku_id_fkey;
-    """
-
-    with db_uow, db_uow.db_pool.cursor() as curs:
-        curs.execute(sql)

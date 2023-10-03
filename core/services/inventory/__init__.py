@@ -19,8 +19,6 @@ description, name and quantity
 So, I am going to model the inventory as follows
 
 Entities in our modeling are:
-    - SKUs
-    - Inventory Receiving
-    - Current Inventory
+    - Inventory Log
 
 """
