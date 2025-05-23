@@ -1,0 +1,25 @@
+services:
+  postgres:
+    image: postgres:latest
+    networks:
+      - main-network
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=postgres
+
+  app:
+    build:
+      context: .
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres
+    networks:
+      - main-network
+    env_file:
+      - .env.local
+
+networks:
+  main-network:
+    driver: bridge
