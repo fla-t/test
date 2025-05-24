@@ -2,7 +2,7 @@ BEFORE SERVICE WORK STARTS, I NEED TO MAKE THE DB AND ALL THE INFRA LAYER WORKIN
 
 1. Dockerfile
 2. Docker-compose config
-3. Database migrations using alembic
+3. Database migrations using alembic (will see about this later)
 
 Then:
 

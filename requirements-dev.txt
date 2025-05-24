@@ -1,0 +1,4 @@
+pytest
+aiosqlite
+
+-r requirements.txt
