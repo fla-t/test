@@ -1,6 +1,6 @@
-import uuid
 from sqlalchemy import Column, String, Text, Double, ForeignKey
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID
+
 from src.infra.storage.db import Base
 
 
