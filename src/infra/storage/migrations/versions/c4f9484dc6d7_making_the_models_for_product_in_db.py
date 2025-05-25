@@ -39,6 +39,14 @@ depends_on = None
 
 
 def upgrade() -> None:
+    op.alter_column(
+        "alembic_version",
+        "version_num",
+        type_=sa.String(length=128),
+        existing_type=sa.String(length=32),
+        existing_nullable=False,
+    )
+
     op.create_table(
         "product_categories",
         sa.Column("id", postgresql.UUID(as_uuid=False), primary_key=True, nullable=False),
@@ -60,7 +68,7 @@ def upgrade() -> None:
         sa.Column("price", sa.Float(), nullable=False),
     )
     # Explicit indexes
-    op.create_index("ix_products_category_id", "products", ["category"])
+    op.create_index("ix_products_category_id", "products", ["category_id"])
 
 
 def downgrade() -> None:
