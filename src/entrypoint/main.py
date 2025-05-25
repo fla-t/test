@@ -1,3 +1,5 @@
 from fastapi import FastAPI
 
-app = FastAPI(title="forsit-test-backend", middleware=[])
+from src.utils.lifespan_builder import lifespan_builder
+
+app = FastAPI(title="forsit-test-backend", lifespan=lifespan_builder)

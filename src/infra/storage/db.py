@@ -6,9 +6,12 @@ from src.infra.config import config
 Base = declarative_base()
 
 
-def db_url() -> str:
+def db_url(sync: bool = False) -> str:
+
     url = (
         f"{config.db.engine}+asyncpg://"
+        if not sync
+        else f"{config.db.engine}://"
         f"{config.db.username}:{config.db.password}"
         f"@{config.db.host}:{config.db.port}"
         f"/{config.db.database_name}"

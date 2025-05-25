@@ -13,4 +13,4 @@ RUN pip install -r requirements.txt
 EXPOSE 8080
 
 # Run the application
-CMD [ "uvicorn", "src.entrypoint.main:app", "--port 8080", "--host 0.0.0.0"]
+CMD python -m uvicorn src.entrypoint.main:app --port 8080 --host 0.0.0.0
