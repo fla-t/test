@@ -5,18 +5,18 @@ from typing import Optional
 from .models import Sale
 
 
-class SaleRepository(ABC):
+class AbstractSalesRepository(ABC):
     @abstractmethod
-    def get_sales_between_dates(
+    async def get_sales_between_dates(
         self,
-        start_date: str,
-        end_date: str,
+        start_date: datetime,
+        end_date: datetime,
     ) -> list[Sale]:
         """Retrieve sales between two dates."""
         pass
 
     @abstractmethod
-    def get_sales_by_product(
+    async def get_sales_by_product(
         self,
         product_id: str,
         start_date: Optional[datetime] = None,
@@ -26,7 +26,7 @@ class SaleRepository(ABC):
         pass
 
     @abstractmethod
-    def get_sales_by_category(
+    async def get_sales_by_category(
         self,
         category_id: str,
         start_date: Optional[datetime] = None,

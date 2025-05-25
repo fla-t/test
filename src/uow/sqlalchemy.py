@@ -5,6 +5,7 @@ from src.uow.abstract import AbstractUnitOfWork
 from src.infra.storage.db import get_session_factory
 from src.infra.storage.repositories.product import ProductRepository
 from src.infra.storage.repositories.inventory import InventoryRepository
+from src.infra.storage.repositories.sales import SalesRepository
 
 
 class SQLAlchemyUnitOfWork(AbstractUnitOfWork):
@@ -15,6 +16,7 @@ class SQLAlchemyUnitOfWork(AbstractUnitOfWork):
 
     products: ProductRepository
     inventory: InventoryRepository
+    sales: SalesRepository
 
     def __init__(self) -> None:
         self.session_factory = get_session_factory()
@@ -25,6 +27,7 @@ class SQLAlchemyUnitOfWork(AbstractUnitOfWork):
 
         self.products = ProductRepository(self.session)
         self.inventory = InventoryRepository(self.session)
+        self.sales = SalesRepository(self.session)
 
         return self
 
