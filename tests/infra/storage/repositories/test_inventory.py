@@ -4,7 +4,7 @@ from datetime import datetime, timedelta, timezone
 import pytest
 
 from src.domain.inventory.models import InventoryItem, InventoryUpdate
-from src.uow.sqlalchemy import SQLAlchemyUnitOfWork  # adjust import path as needed
+from src.uow.sqlalchemy import SQLAlchemyUnitOfWork
 
 
 @pytest.mark.asyncio
