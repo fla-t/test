@@ -7,7 +7,7 @@ UUID = str
 class Product:
     id: UUID
     name: str
-    category: UUID
+    category_id: UUID
     description: str
 
     # in a real production app, I would store this in cents

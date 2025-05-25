@@ -1,26 +1,27 @@
 from abc import ABC, abstractmethod
+from typing import Optional
 
 from .models import Product, ProductCategory
 
 
-class ProductRepository(ABC):
+class AbstractProductRepository(ABC):
     @abstractmethod
-    def get_product(self, product_id: str) -> Product:
+    async def get_product(self, product_id: str) -> Optional[Product]:
         """Get a product by its ID."""
         pass
 
     @abstractmethod
-    def get_products(self) -> list[Product]:
+    async def get_products(self) -> list[Product]:
         """Get all products."""
         pass
 
     @abstractmethod
-    def create_product(self, product: Product) -> Product:
+    async def create_product(self, product: Product) -> Product:
         """Create a new product."""
         pass
 
     @abstractmethod
-    def update_product(self, product: Product) -> Product:
+    async def update_product(self, product: Product) -> Product:
         """Update an existing product."""
 
         # I have worked in a lot of inventory related codebase,
@@ -30,21 +31,21 @@ class ProductRepository(ABC):
         pass
 
     @abstractmethod
-    def delete_product(self, product_id: str) -> None:
+    async def delete_product(self, product_id: str) -> None:
         """Delete a product by its ID."""
         pass
 
     @abstractmethod
-    def add_category(self, category_id: str) -> ProductCategory:
+    async def add_category(self, category: ProductCategory) -> ProductCategory:
         """Get a product category by its ID."""
         pass
 
     @abstractmethod
-    def get_category(self, category_id: str) -> ProductCategory:
+    async def get_category(self, category_id: str) -> Optional[ProductCategory]:
         """Get a product category by its ID."""
         pass
 
     @abstractmethod
-    def get_categories(self) -> list[ProductCategory]:
+    async def get_categories(self) -> list[ProductCategory]:
         """Get all product categories."""
         pass
