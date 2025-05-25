@@ -65,7 +65,7 @@ async def template_database_creation(postgres_container: PostgresContainer) -> s
 
 
 @pytest_asyncio.fixture(scope="function")
-async def database(
+async def database_creation(
     postgres_container: PostgresContainer, template_database_creation: str
 ) -> AsyncGenerator[str, None]:
     """
@@ -96,6 +96,16 @@ async def database(
     finally:
         admin_connection = await asyncpg.connect(**admin_conf)
         try:
+            await admin_connection.execute(
+                """
+                    select pg_terminate_backend(pid)
+                    from pg_stat_activity
+                    where datname = $1
+                        and pid <> pg_backend_pid()
+                    ;
+                """,
+                db_name,
+            )
             await admin_connection.execute(f"DROP DATABASE IF EXISTS {db_name};")
         finally:
             await admin_connection.close()
