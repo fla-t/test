@@ -34,11 +34,8 @@ def upgrade():
         ),
         sa.Column("quantity", sa.Integer(), nullable=False),
         sa.Column("total_price", sa.Float(), nullable=False),
-        sa.Column("created_at", sa.DateTime(timezone=True), nullable=False),
+        sa.Column("created_at", sa.DateTime(timezone=True), nullable=False, index=True),
     )
-
-    op.create_index("ix_sales_product_id", "sales", ["product_id"])
-    op.create_index("ix_sales_created_at", "sales", ["created_at"])
 
 
 def downgrade():
