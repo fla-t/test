@@ -2,7 +2,7 @@ import uuid
 import pytest
 
 from src.domain.product.models import Product, ProductCategory
-from src.uow.sqlalchemy import SQLAlchemyUnitOfWork  # or wherever your UoW lives
+from src.uow.sqlalchemy import SQLAlchemyUnitOfWork
 
 
 @pytest.mark.asyncio
