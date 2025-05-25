@@ -4,6 +4,7 @@ from types import TracebackType
 from src.uow.abstract import AbstractUnitOfWork
 from src.infra.storage.db import get_session_factory
 from src.infra.storage.repositories.product import ProductRepository
+from src.infra.storage.repositories.inventory import InventoryRepository
 
 
 class SQLAlchemyUnitOfWork(AbstractUnitOfWork):
@@ -13,6 +14,7 @@ class SQLAlchemyUnitOfWork(AbstractUnitOfWork):
     """
 
     products: ProductRepository
+    inventory: InventoryRepository
 
     def __init__(self) -> None:
         self.session_factory = get_session_factory()
@@ -22,6 +24,7 @@ class SQLAlchemyUnitOfWork(AbstractUnitOfWork):
         self.session.begin()
 
         self.products = ProductRepository(self.session)
+        self.inventory = InventoryRepository(self.session)
 
         return self
 

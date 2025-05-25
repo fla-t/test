@@ -4,13 +4,13 @@ from typing import List, Optional
 from src.domain.inventory.models import InventoryItem, InventoryUpdate
 
 
-class InventoryRepository(ABC):
+class AbstractInventoryRepository(ABC):
     @abstractmethod
     async def add_inventory_update(self, update: InventoryUpdate) -> None:
         """Persist a new inventory update"""
 
     @abstractmethod
-    async def get_by_product(self, product_id: int) -> Optional[InventoryItem]:
+    async def get_by_product(self, product_id: str) -> Optional[InventoryItem]:
         """Fetch a single inventory item by its product ID."""
 
     @abstractmethod
