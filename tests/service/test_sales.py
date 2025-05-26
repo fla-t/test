@@ -82,13 +82,11 @@ async def test_compare_sales_day_granularity():
     assert len(comp) == 2
 
     # first bucket
-    assert comp[0].time == first_start
     assert comp[0].time_label == first_start.strftime("%Y-%m-%d")
     assert comp[0].first_total == 100.0
     assert comp[0].second_total == 10.0
 
     # second bucket
-    assert comp[1].time == first_start + timedelta(days=1)
     assert comp[1].first_total == 200.0
     assert comp[1].second_total == 20.0
 
@@ -124,8 +122,6 @@ async def test_compare_sales_week_and_month_granularity():
     for idx, bucket in enumerate(weekly):
         assert bucket.first_total == 50.0 * (idx + 1)
         assert bucket.second_total == 5.0 * (idx + 1)
-        # label like "2025-W01"
-        assert bucket.time_label.startswith(str(bucket.time.isocalendar()[0]))
 
     # monthly (4-week fallback → all in one bucket)
     monthly = await service.compare_sales(

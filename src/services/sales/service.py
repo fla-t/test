@@ -8,7 +8,6 @@ from src.domain.sales.models import Sale
 
 @dataclass
 class SaleComparison:
-    time: datetime
     time_label: str
     first_total: float
     second_total: float
@@ -19,6 +18,10 @@ class ProductService:
         self.uow = uow
 
     async def create_sale(self, product_id: str, quantity: int, total_price: float) -> Sale:
+        # this is just a test endpoint, its there so I can seed data.
+        # otherwise the total_price would be calculated based on the product price
+        # and fetched from the products using ACL, which I left was overkill
+
         sale = Sale.create(
             product_id=product_id,
             quantity=quantity,
@@ -61,10 +64,10 @@ class ProductService:
         ), "The time periods must be of the same length."
 
         async with self.uow:
-            first_sales = await self.get_sales_between_dates(
+            first_sales = await self.uow.sales.get_sales_between_dates(
                 first_start, first_end, product_id, category_id
             )
-            second_sales = await self.get_sales_between_dates(
+            second_sales = await self.uow.sales.get_sales_between_dates(
                 second_start, second_end, product_id, category_id
             )
 
@@ -120,7 +123,6 @@ class ProductService:
 
             comparison.append(
                 SaleComparison(
-                    time=first_start,
                     time_label=make_label(first_start),
                     first_total=total_first,
                     second_total=total_second,
