@@ -23,7 +23,7 @@ class SQLAlchemyUnitOfWork(AbstractUnitOfWork):
 
     async def __aenter__(self) -> "SQLAlchemyUnitOfWork":
         self.session = self.session_factory()
-        self.session.begin()
+        await self.session.begin()
 
         self.products = ProductRepository(self.session)
         self.inventory = InventoryRepository(self.session)
