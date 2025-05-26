@@ -13,11 +13,16 @@ class InMemoryUnitOfWork(AbstractUnitOfWork):
     Implements async context management and transaction handling.
     """
 
-    async def __aenter__(self) -> "InMemoryUnitOfWork":
+    products: ProductRepository
+    inventory: InventoryRepository
+    sales: SalesRepository
+
+    def __init__(self) -> None:
         self.products = ProductRepository()
         self.inventory = InventoryRepository()
         self.sales = SalesRepository()
 
+    async def __aenter__(self) -> "InMemoryUnitOfWork":
         return self
 
     async def __aexit__(

@@ -6,8 +6,9 @@ from src.domain.product.repository import AbstractProductRepository
 from src.domain.inventory.repository import AbstractInventoryRepository
 from src.domain.sales.repository import AbstractSalesRepository
 
-
-UoW = TypeVar("UoW", bound="AbstractUnitOfWork")
+ProductRepository = TypeVar("ProductRepository", bound=AbstractProductRepository)
+InventoryRepository = TypeVar("InventoryRepository", bound=AbstractInventoryRepository)
+SalesRepository = TypeVar("SalesRepository", bound=AbstractSalesRepository)
 
 
 class AbstractUnitOfWork(ABC):
@@ -16,12 +17,12 @@ class AbstractUnitOfWork(ABC):
     Concrete implementations must implement context management and transaction methods.
     """
 
-    products: AbstractProductRepository
-    inventory: AbstractInventoryRepository
-    sales: AbstractSalesRepository
+    products: ProductRepository
+    inventory: InventoryRepository
+    sales: SalesRepository
 
     @abstractmethod
-    async def __aenter__(self: UoW) -> UoW:
+    async def __aenter__(self) -> "AbstractUnitOfWork":
         """Enter the async context and return the unit of work instance."""
         raise NotImplementedError
 
