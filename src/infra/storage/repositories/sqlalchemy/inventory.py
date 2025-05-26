@@ -1,4 +1,3 @@
-# src/infra/storage/repositories/inventory.py
 from typing import List, Optional
 
 from sqlalchemy import select
