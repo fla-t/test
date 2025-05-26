@@ -1,3 +1,4 @@
+# tests/infra/storage/repositories/test_sales.py
 import uuid
 from datetime import datetime, timedelta, timezone
 
@@ -11,12 +12,12 @@ from src.uow.sqlalchemy import SQLAlchemyUnitOfWork
 @pytest.mark.asyncio
 async def test_add_and_get_sales_between_dates(database_creation):
     """
-    Creating several sales on different days, then retrieving only
+    Creating three sales on different days, then retrieving only
     those within a given date range.
     """
     uow = SQLAlchemyUnitOfWork()
 
-    # First set up a product & category so FK constraints are satisfied
+    # bootstrap a category and product
     category = ProductCategory(id=str(uuid.uuid4()), name="cat1", description=None)
     product = Product(
         id=str(uuid.uuid4()),
@@ -26,7 +27,6 @@ async def test_add_and_get_sales_between_dates(database_creation):
         price=1.23,
     )
 
-    # three sales: 10 days ago, 5 days ago, today
     now = datetime.now(timezone.utc)
     s_old = Sale(
         id=str(uuid.uuid4()),
@@ -50,22 +50,24 @@ async def test_add_and_get_sales_between_dates(database_creation):
         created_at=now,
     )
 
-    # create category, product, and all three sales
+    # create category & product
     async with uow:
         await uow.products.add_category(category)
     async with uow:
         await uow.products.create_product(product)
+
+    # add all three sales
     async with uow:
         await uow.sales.add_sale(s_old)
         await uow.sales.add_sale(s_mid)
         await uow.sales.add_sale(s_new)
 
-    # now fetch between 7 days ago and today — should return only s_mid and s_new
+    # fetch between 7 days ago and now
     start = now - timedelta(days=7)
     end = now
 
     async with uow:
-        between = await uow.sales.get_sales_between_dates(start, end)
+        between = await uow.sales.get_sales_between_dates(start_date=start, end_date=end)
 
     ids = {sale.id for sale in between}
     assert ids == {s_mid.id, s_new.id}
@@ -74,7 +76,7 @@ async def test_add_and_get_sales_between_dates(database_creation):
 @pytest.mark.asyncio
 async def test_get_sales_by_product(database_creation):
     """
-    Sales for two different products, querying by product filters correctly.
+    Sales for two different products; filtering by product_id returns only that product's sales.
     """
     uow = SQLAlchemyUnitOfWork()
 
@@ -94,32 +96,38 @@ async def test_get_sales_by_product(database_creation):
         price=7.0,
     )
 
+    # one sale per product, both at "now"
+    now = datetime.now(timezone.utc)
     s1 = Sale(
         id=str(uuid.uuid4()),
         product_id=p1.id,
         quantity=1,
         total_price=5.0,
-        created_at=datetime.now(timezone.utc),
+        created_at=now,
     )
     s2 = Sale(
         id=str(uuid.uuid4()),
         product_id=p2.id,
         quantity=2,
         total_price=14.0,
-        created_at=datetime.now(timezone.utc),
+        created_at=now,
     )
 
+    # create category & products
     async with uow:
         await uow.products.add_category(cat)
     async with uow:
         await uow.products.create_product(p1)
         await uow.products.create_product(p2)
+
+    # add both sales
     async with uow:
         await uow.sales.add_sale(s1)
         await uow.sales.add_sale(s2)
 
+    # filter by product_id == p1.id
     async with uow:
-        res = await uow.sales.get_sales_by_product(p1.id)
+        res = await uow.sales.get_sales_between_dates(product_id=p1.id)
 
     assert len(res) == 1
     assert res[0].id == s1.id
@@ -129,7 +137,7 @@ async def test_get_sales_by_product(database_creation):
 @pytest.mark.asyncio
 async def test_get_sales_by_category(database_creation):
     """
-    Sales for products in two categories; querying by category returns only matching.
+    Sales for products in two categories; filtering by category_id returns only matching sales.
     """
     uow = SQLAlchemyUnitOfWork()
 
@@ -151,35 +159,39 @@ async def test_get_sales_by_category(database_creation):
         price=3.0,
     )
 
+    now = datetime.now(timezone.utc)
     s1 = Sale(
         id=str(uuid.uuid4()),
         product_id=p1.id,
         quantity=5,
         total_price=10.0,
-        created_at=datetime.now(timezone.utc),
+        created_at=now,
     )
     s2 = Sale(
         id=str(uuid.uuid4()),
         product_id=p2.id,
         quantity=7,
         total_price=21.0,
-        created_at=datetime.now(timezone.utc),
+        created_at=now,
     )
 
-    # bootstrap categories, products, then sales
+    # create both categories & products
     async with uow:
         await uow.products.add_category(cat1)
         await uow.products.add_category(cat2)
     async with uow:
         await uow.products.create_product(p1)
         await uow.products.create_product(p2)
+
+    # add both sales
     async with uow:
         await uow.sales.add_sale(s1)
         await uow.sales.add_sale(s2)
 
+    # filter by category_id == cat1.id
     async with uow:
-        out = await uow.sales.get_sales_by_category(cat1.id)
+        out = await uow.sales.get_sales_between_dates(category_id=cat1.id)
 
     assert len(out) == 1
-    assert out[0].product_id == p1.id
     assert out[0].id == s1.id
+    assert out[0].product_id == p1.id

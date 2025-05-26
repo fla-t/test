@@ -7,30 +7,18 @@ from .models import Sale
 
 class AbstractSalesRepository(ABC):
     @abstractmethod
+    async def add_sale(self, sale: Sale) -> Sale:
+        """Persist a new sale"""
+        # just for testing, because I have no way to simulate perchases
+        pass
+
+    @abstractmethod
     async def get_sales_between_dates(
         self,
-        start_date: datetime,
-        end_date: datetime,
+        start_date: Optional[datetime] = None,
+        end_date: Optional[datetime] = None,
+        product_id: Optional[str] = None,
+        category_id: Optional[str] = None,
     ) -> list[Sale]:
         """Retrieve sales between two dates"""
-        pass
-
-    @abstractmethod
-    async def get_sales_by_product(
-        self,
-        product_id: str,
-        start_date: Optional[datetime] = None,
-        end_date: Optional[datetime] = None,
-    ) -> list[Sale]:
-        """Retrieve sales for a specific product"""
-        pass
-
-    @abstractmethod
-    async def get_sales_by_category(
-        self,
-        category_id: str,
-        start_date: Optional[datetime] = None,
-        end_date: Optional[datetime] = None,
-    ) -> list[Sale]:
-        """Retrieve sales for a specific product category"""
         pass

@@ -23,39 +23,27 @@ class SalesRepository(AbstractSalesRepository):
         self.sales.append(sale)
         return sale
 
-    async def get_sales_between_dates(self, start_date: datetime, end_date: datetime) -> list[Sale]:
-        return [sale for sale in self.sales if start_date <= sale.created_at <= end_date]
-
-    async def get_sales_by_product(
+    async def get_sales_between_dates(
         self,
-        product_id: str,
         start_date: Optional[datetime] = None,
         end_date: Optional[datetime] = None,
+        product_id: Optional[str] = None,
+        category_id: Optional[str] = None,
     ) -> list[Sale]:
-        return [
-            sale
-            for sale in self.sales
-            if sale.product_id == product_id
-            and (start_date is None or sale.created_at >= start_date)
-            and (end_date is None or sale.created_at <= end_date)
-        ]
+        results = self.sales
 
-    async def get_sales_by_category(
-        self,
-        category_id: str,
-        start_date: Optional[datetime] = None,
-        end_date: Optional[datetime] = None,
-    ) -> list[Sale]:
-        products_in_category = [
-            product_id
-            for product_id, product in self.products.items()
-            if product.category_id == category_id
-        ]
+        if start_date:
+            results = [s for s in results if s.created_at >= start_date]
 
-        return [
-            sale
-            for sale in self.sales
-            if sale.product_id in products_in_category
-            and (start_date is None or sale.created_at >= start_date)
-            and (end_date is None or sale.created_at <= end_date)
-        ]
+        if end_date:
+            results = [s for s in results if s.created_at <= end_date]
+
+        if product_id:
+            results = [s for s in results if s.product_id == product_id]
+
+        if category_id:
+            # filter by category, assuming products are available
+            product_ids = [p.id for p in self.products.values() if p.category_id == category_id]
+            results = [s for s in results if s.product_id in product_ids]
+
+        return results

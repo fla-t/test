@@ -1,7 +1,7 @@
 from datetime import datetime
-from typing import List, Optional
+from typing import List, Optional, Any
 
-from sqlalchemy import select, and_, join
+from sqlalchemy import select, and_
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.domain.sales.models import Sale as DomainSale
@@ -26,80 +26,43 @@ class SalesRepository(AbstractSalesRepository):
         return sale
 
     async def get_sales_between_dates(
-        self, start_date: datetime, end_date: datetime
-    ) -> List[DomainSale]:
-        # assume ISO strings; convert to datetime
-        query = (
-            select(SaleORM)
-            .where(SaleORM.created_at.between(start_date, end_date))
-            .order_by(SaleORM.created_at)
-        )
-        result = await self.session.execute(query)
-        return [
-            DomainSale(
-                id=o.id,
-                product_id=o.product_id,
-                quantity=o.quantity,
-                total_price=o.total_price,
-                created_at=o.created_at,
-            )
-            for o in result.scalars().all()
-        ]
-
-    async def get_sales_by_product(
         self,
-        product_id: str,
         start_date: Optional[datetime] = None,
         end_date: Optional[datetime] = None,
+        product_id: Optional[str] = None,
+        category_id: Optional[str] = None,
     ) -> List[DomainSale]:
-        filters = [SaleORM.product_id == product_id]
-        if start_date is not None:
+
+        query = select(SaleORM)
+        filters: list[Any] = []
+
+        if start_date:
             filters.append(SaleORM.created_at >= start_date)
-        if end_date is not None:
+
+        if end_date:
             filters.append(SaleORM.created_at <= end_date)
 
-        query = select(SaleORM).where(and_(*filters)).order_by(SaleORM.created_at)
+        if product_id:
+            filters.append(SaleORM.product_id == product_id)
+
+        # if filtering by category, join into ProductORM
+        if category_id is not None:
+            query = query.join(ProductORM, SaleORM.product_id == ProductORM.id)
+            filters.append(ProductORM.category_id == category_id)
+
+        if filters:
+            query = query.where(and_(*filters))
+
         result = await self.session.execute(query)
+        results = result.scalars().all()
+
         return [
             DomainSale(
-                id=o.id,
-                product_id=o.product_id,
-                quantity=o.quantity,
-                total_price=o.total_price,
-                created_at=o.created_at,
+                id=s.id,
+                product_id=s.product_id,
+                quantity=s.quantity,
+                total_price=s.total_price,
+                created_at=s.created_at,
             )
-            for o in result.scalars().all()
-        ]
-
-    async def get_sales_by_category(
-        self,
-        category_id: str,
-        start_date: Optional[datetime] = None,
-        end_date: Optional[datetime] = None,
-    ) -> List[DomainSale]:
-        # join Sale → Product to filter by category
-        join_query = join(SaleORM, ProductORM, SaleORM.product_id == ProductORM.id)
-
-        filters = [ProductORM.category_id == category_id]
-        if start_date is not None:
-            filters.append(SaleORM.created_at >= start_date)
-        if end_date is not None:
-            filters.append(SaleORM.created_at <= end_date)
-
-        query = (
-            select(SaleORM)
-            .select_from(join_query)
-            .where(and_(*filters))
-            .order_by(SaleORM.created_at)
-        )
-        result = await self.session.execute(query)
-        return [
-            DomainSale(
-                id=o.id,
-                product_id=o.product_id,
-                quantity=o.quantity,
-                total_price=o.total_price,
-                created_at=o.created_at,
-            )
-            for o in result.scalars().all()
+            for s in results
         ]
