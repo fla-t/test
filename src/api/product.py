@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends
 from fastapi.responses import JSONResponse
+from fastapi.encoders import jsonable_encoder
 from pydantic import BaseModel
 
 from src.uow.sqlalchemy import SQLAlchemyUnitOfWork
@@ -33,7 +34,8 @@ async def get_products(
     Get all products.
     """
     service = ProductService(uow)
-    return await service.get_products()
+    results = await service.get_products()
+    return JSONResponse(content=jsonable_encoder(results))
 
 
 @ProductRouter.get("/{product_id}")
@@ -48,12 +50,12 @@ async def get_product(
     product = await service.get_product(product_id)
 
     if not product:
-        JSONResponse(
+        return JSONResponse(
             status_code=404,
             content={"status": "error", "message": "Product not found"},
         )
 
-    return product
+    return JSONResponse(content=jsonable_encoder(product))
 
 
 @ProductRouter.post("/")
@@ -65,12 +67,13 @@ async def create_product(
     Create a new product.
     """
     service = ProductService(uow)
-    return await service.create_product(
+    result = await service.create_product(
         name=product.name,
         category_id=product.category_id,
         description=product.description,
         price=product.price,
     )
+    return JSONResponse(content=jsonable_encoder(result))
 
 
 @ProductRouter.put("/{product_id}")
@@ -91,13 +94,14 @@ async def update_product(
             content={"status": "error", "message": "Product not found"},
         )
 
-    return await service.update_product(
+    result = await service.update_product(
         product_id=product_id,
         updated_name=product.name,
         updated_category_id=product.category_id,
         updated_description=product.description,
         updated_price=product.price,
     )
+    return JSONResponse(content=jsonable_encoder(result))
 
 
 @ProductRouter.delete("/{product_id}")
@@ -121,7 +125,8 @@ async def get_categories(
     Get all product categories.
     """
     service = ProductService(uow)
-    return await service.get_categories()
+    result = await service.get_categories()
+    return JSONResponse(content=jsonable_encoder(result))
 
 
 @CategoryRouter.get("/{category_id}")
@@ -133,7 +138,15 @@ async def get_category(
     Get a product category by ID.
     """
     service = ProductService(uow)
-    return await service.get_category(category_id)
+    result = await service.get_category(category_id)
+
+    if not result:
+        return JSONResponse(
+            status_code=404,
+            content={"status": "error", "message": "Category not found"},
+        )
+
+    return JSONResponse(content=jsonable_encoder(result))
 
 
 @CategoryRouter.post("/")
@@ -145,7 +158,9 @@ async def create_category(
     Create a new product category.
     """
     service = ProductService(uow)
-    return await service.add_category(
+    result = await service.add_category(
         name=category.name,
         description=category.description,
     )
+
+    return JSONResponse(content=jsonable_encoder(result))
