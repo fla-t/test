@@ -50,11 +50,8 @@ async def test_add_and_get_sales_between_dates():
         created_at=now,
     )
 
-    # create category, product, and all three sales
     async with uow:
-        await uow.products.add_category(category)
-    async with uow:
-        await uow.products.create_product(product)
+        await uow.sales.add_product(product)
     async with uow:
         await uow.sales.add_sale(s_old)
         await uow.sales.add_sale(s_mid)
@@ -110,10 +107,8 @@ async def test_get_sales_by_product():
     )
 
     async with uow:
-        await uow.products.add_category(cat)
-    async with uow:
-        await uow.products.create_product(p1)
-        await uow.products.create_product(p2)
+        await uow.sales.add_product(p1)
+        await uow.sales.add_product(p2)
     async with uow:
         await uow.sales.add_sale(s1)
         await uow.sales.add_sale(s2)
