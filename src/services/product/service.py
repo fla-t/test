@@ -31,7 +31,21 @@ class ProductService:
         async with self.uow:
             return await self.uow.products.get_products()
 
-    async def update_product(self, product: Product) -> Product:
+    async def update_product(
+        self,
+        product_id: str,
+        updated_name: str,
+        updated_category_id: str,
+        updated_description: str,
+        updated_price: float,
+    ) -> Product:
+        product = Product(
+            id=product_id,
+            name=updated_name,
+            category_id=updated_category_id,
+            description=updated_description,
+            price=updated_price,
+        )
         async with self.uow:
             updated_product = await self.uow.products.update_product(product)
 

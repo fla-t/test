@@ -77,7 +77,13 @@ async def test_update_product():
     prod.description = "upgraded"
     prod.price = 7.5
 
-    updated = await service.update_product(prod)
+    updated = await service.update_product(
+        product_id=prod.id,
+        updated_name=prod.name,
+        updated_category_id=prod.category_id,
+        updated_description=prod.description,
+        updated_price=prod.price,
+    )
     assert updated.id == prod.id
     assert updated.name == "Super Widget"
     assert updated.description == "upgraded"
