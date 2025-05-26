@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Optional
+from typing import Optional, Literal
 
 from fastapi import APIRouter, Depends
 from fastapi.responses import JSONResponse
@@ -57,6 +57,7 @@ async def compare_sales(
     second_end: datetime,
     product_id: Optional[str] = None,
     category_id: Optional[str] = None,
+    granularity: Literal["day", "week", "month"] = "day",
     uow: SQLAlchemyUnitOfWork = Depends(SQLAlchemyUnitOfWork),
 ):
     """
@@ -64,7 +65,7 @@ async def compare_sales(
     """
     service = ProductService(uow)
     comparison = await service.compare_sales(
-        first_start, first_end, second_start, second_end, product_id, category_id
+        first_start, first_end, second_start, second_end, product_id, category_id, granularity
     )
 
     return JSONResponse(content=jsonable_encoder(comparison))
