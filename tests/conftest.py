@@ -59,7 +59,9 @@ async def template_database_creation(postgres_container: PostgresContainer) -> s
     cfg = Config()
     cfg.set_main_option("script_location", "src/infra/storage/migrations")
     cfg.set_main_option("sqlalchemy.url", target_db_url)
-    command.upgrade(cfg, "head")
+
+    # Update the db till the point where there are no seeds added in the DB
+    command.upgrade(cfg, "d51666f213fe")
 
     return target_db_url
 

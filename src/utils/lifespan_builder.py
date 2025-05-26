@@ -19,7 +19,7 @@ async def lifespan_builder(app: FastAPI):
     def run_migrations():
         cfg = Config()
         cfg.set_main_option("script_location", "src/infra/storage/migrations")
-        cfg.set_main_option("sqlalchemy.url", db_url())
+        cfg.set_main_option("sqlalchemy.url", db_url(sync=True))
         command.upgrade(cfg, "head")
 
     loop = asyncio.get_event_loop()
