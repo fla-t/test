@@ -3,9 +3,9 @@ from types import TracebackType
 
 from src.uow.abstract import AbstractUnitOfWork
 from src.infra.storage.db import get_session_factory
-from src.infra.storage.repositories.product import ProductRepository
-from src.infra.storage.repositories.inventory import InventoryRepository
-from src.infra.storage.repositories.sales import SalesRepository
+from src.infra.storage.repositories.sqlalchemy.product import ProductRepository
+from src.infra.storage.repositories.sqlalchemy.inventory import InventoryRepository
+from src.infra.storage.repositories.sqlalchemy.sales import SalesRepository
 
 
 class SQLAlchemyUnitOfWork(AbstractUnitOfWork):

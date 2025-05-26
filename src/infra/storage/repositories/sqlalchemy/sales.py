@@ -1,6 +1,3 @@
-# src/infra/storage/repositories/sale.py
-
-import uuid
 from datetime import datetime
 from typing import List, Optional
 
