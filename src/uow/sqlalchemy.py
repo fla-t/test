@@ -46,17 +46,17 @@ class SQLAlchemyUnitOfWork(AbstractUnitOfWork):
             await self.close()
 
     async def commit(self) -> None:
-        """Commit the current transaction."""
+        """Commit the current transaction"""
         assert self.session is not None, "Session not initialized"
         await self.session.commit()
 
     async def rollback(self) -> None:
-        """Rollback the current transaction."""
+        """Rollback the current transaction"""
         assert self.session is not None, "Session not initialized"
         await self.session.rollback()
 
     async def close(self) -> None:
-        """Close the session."""
+        """Close the session"""
         if self.session:
             await self.session.close()
             self.session = None

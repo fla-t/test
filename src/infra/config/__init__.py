@@ -4,7 +4,7 @@ from pydantic import BaseModel
 
 
 class DBConfig(BaseModel):
-    """Database configuration."""
+    """Database configuration"""
 
     host: str
     port: int
@@ -15,7 +15,7 @@ class DBConfig(BaseModel):
 
 
 class Config(BaseModel):
-    """Configuration class for the application."""
+    """Configuration class for the application"""
 
     db: DBConfig
 

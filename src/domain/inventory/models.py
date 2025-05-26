@@ -14,7 +14,7 @@ class InventoryUpdate:
 
     @classmethod
     def create(cls, product_id: UUID, quantity: int) -> "InventoryUpdate":
-        """Factory method to create a new inventory update."""
+        """Factory method to create a new inventory update"""
         return cls(
             id=str(uuid4()),
             product_id=product_id,

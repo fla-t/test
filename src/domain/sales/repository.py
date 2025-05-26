@@ -12,7 +12,7 @@ class AbstractSalesRepository(ABC):
         start_date: datetime,
         end_date: datetime,
     ) -> list[Sale]:
-        """Retrieve sales between two dates."""
+        """Retrieve sales between two dates"""
         pass
 
     @abstractmethod
@@ -22,7 +22,7 @@ class AbstractSalesRepository(ABC):
         start_date: Optional[datetime] = None,
         end_date: Optional[datetime] = None,
     ) -> list[Sale]:
-        """Retrieve sales for a specific product."""
+        """Retrieve sales for a specific product"""
         pass
 
     @abstractmethod
@@ -32,5 +32,5 @@ class AbstractSalesRepository(ABC):
         start_date: Optional[datetime] = None,
         end_date: Optional[datetime] = None,
     ) -> list[Sale]:
-        """Retrieve sales for a specific product category."""
+        """Retrieve sales for a specific product category"""
         pass

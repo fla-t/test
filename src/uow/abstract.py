@@ -23,7 +23,7 @@ class AbstractUnitOfWork(ABC):
 
     @abstractmethod
     async def __aenter__(self) -> "AbstractUnitOfWork":
-        """Enter the async context and return the unit of work instance."""
+        """Enter the async context and return the unit of work instance"""
         raise NotImplementedError
 
     @abstractmethod
@@ -33,15 +33,15 @@ class AbstractUnitOfWork(ABC):
         exc_val: Optional[BaseException],
         exc_tb: Optional[TracebackType],
     ) -> None:
-        """Exit async context; commit if no exception, else rollback."""
+        """Exit async context; commit if no exception, else rollback"""
         raise NotImplementedError
 
     @abstractmethod
     async def commit(self) -> None:
-        """Persist changes in the current transaction."""
+        """Persist changes in the current transaction"""
         raise NotImplementedError
 
     @abstractmethod
     async def rollback(self) -> None:
-        """Roll back the current transaction."""
+        """Roll back the current transaction"""
         raise NotImplementedError

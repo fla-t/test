@@ -11,12 +11,12 @@ class AbstractInventoryRepository(ABC):
 
     @abstractmethod
     async def get_by_product(self, product_id: str) -> Optional[InventoryItem]:
-        """Fetch a single inventory item by its product ID."""
+        """Fetch a single inventory item by its product ID"""
 
     @abstractmethod
     async def list(self) -> List[InventoryItem]:
-        """Return all inventory items."""
+        """Return all inventory items"""
 
     @abstractmethod
     async def low_stock_alerts(self, threshold: int = 10) -> List[InventoryItem]:
-        """Return items whose quantity is at or below `threshold`."""
+        """Return items whose quantity is at or below `threshold`"""
