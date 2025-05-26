@@ -3,11 +3,13 @@ from fastapi.responses import JSONResponse
 
 from src.utils.lifespan_builder import lifespan_builder
 from src.api.product import ProductRouter, CategoryRouter
+from src.api.inventory import InventoryRouter
 
 app = FastAPI(title="forsit-test-backend", lifespan=lifespan_builder)
 
 app.include_router(ProductRouter)
 app.include_router(CategoryRouter)
+app.include_router(InventoryRouter)
 
 
 # exception handler
