@@ -23,6 +23,7 @@ class SalesRepository(AbstractSalesRepository):
             created_at=sale.created_at,
         )
         self.session.add(orm)
+        await self.session.flush()
         return sale
 
     async def get_sales_between_dates(

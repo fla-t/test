@@ -35,6 +35,7 @@ class InventoryRepository(AbstractInventoryRepository):
                 quantity=update.quantity,
             )
             self.session.add(new_item)
+            await self.session.flush()
 
     async def get_by_product(self, product_id: str) -> Optional[DomainItem]:
         item = await self.session.get(ItemORM, product_id)

@@ -24,6 +24,7 @@ class ProductRepository(AbstractProductRepository):
             price=product.price,
         )
         self.session.add(product_orm)
+        await self.session.flush()
         return product
 
     async def get_product(self, product_id: str) -> Optional[Product]:
@@ -90,6 +91,7 @@ class ProductRepository(AbstractProductRepository):
             description=category.description,
         )
         self.session.add(category_orm)
+        await self.session.flush()
         return category
 
     async def get_category(self, category_id: str) -> Optional[ProductCategory]:
