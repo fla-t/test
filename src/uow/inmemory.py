@@ -2,9 +2,9 @@ from typing import Optional, Type
 from types import TracebackType
 
 from src.uow.abstract import AbstractUnitOfWork
-from src.infra.storage.repositories.product import ProductRepository
-from src.infra.storage.repositories.inventory import InventoryRepository
-from src.infra.storage.repositories.sales import SalesRepository
+from src.infra.storage.repositories.inmemory.product import ProductRepository
+from src.infra.storage.repositories.inmemory.inventory import InventoryRepository
+from src.infra.storage.repositories.inmemory.sales import SalesRepository
 
 
 class InMemoryUnitOfWork(AbstractUnitOfWork):
@@ -13,11 +13,11 @@ class InMemoryUnitOfWork(AbstractUnitOfWork):
     Implements async context management and transaction handling.
     """
 
-    products: ProductRepository
-    inventory: InventoryRepository
-    sales: SalesRepository
-
     async def __aenter__(self) -> "InMemoryUnitOfWork":
+        self.products = ProductRepository()
+        self.inventory = InventoryRepository()
+        self.sales = SalesRepository()
+
         return self
 
     async def __aexit__(

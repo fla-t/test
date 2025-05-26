@@ -14,10 +14,6 @@ class SQLAlchemyUnitOfWork(AbstractUnitOfWork):
     Implements async context management and transaction handling.
     """
 
-    products: ProductRepository
-    inventory: InventoryRepository
-    sales: SalesRepository
-
     def __init__(self) -> None:
         self.session_factory = get_session_factory()
 
