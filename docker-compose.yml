@@ -2,11 +2,16 @@ services:
   postgres:
     image: postgres:latest
     networks:
-      - main-network
+      - my-network
     environment:
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_USER=username
+      - POSTGRES_PASSWORD=password
       - POSTGRES_DB=forsit
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U username -d forsit"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   app:
     build:
@@ -14,12 +19,11 @@ services:
     ports:
       - "8080:8080"
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
     networks:
-      - main-network
-    env_file:
-      - .env.local
+      - my-network
 
 networks:
-  main-network:
+  my-network:
     driver: bridge
