@@ -1,4 +1,3 @@
-from uuid import uuid4
 from typing import Optional
 
 from src.uow.abstract import AbstractUnitOfWork
@@ -12,8 +11,7 @@ class ProductService:
     async def create_product(
         self, name: str, category_id: str, description: str, price: float
     ) -> Product:
-        product = Product(
-            id=str(uuid4()),
+        product = Product.create(
             name=name,
             category_id=category_id,
             description=description,
@@ -44,8 +42,7 @@ class ProductService:
             await self.uow.products.delete_product(product_id)
 
     async def add_category(self, name: str, description: str) -> ProductCategory:
-        category = ProductCategory(
-            id=str(uuid4()),
+        category = ProductCategory.create(
             name=name,
             description=description,
         )
